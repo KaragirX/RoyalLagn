@@ -26,7 +26,7 @@ route: "/(tabs)",
 {
 id: "vendor",
 title: "Vendor Dashboard",
-description: "Manage your business, bookings, and profile",
+description: "Manage your business, profile, and services",
 icon: Building2,
 color: "#F59E0B",
 route: "/vendor-dashboard",

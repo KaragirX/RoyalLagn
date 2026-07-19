@@ -361,13 +361,6 @@ onPress={() => router.push("/vendor-dashboard")}
 
 <TouchableOpacity className="items-center">
 <View className="w-6 h-6 items-center justify-center">
-<View className="w-5 h-5 border-2 border-muted-foreground rounded-md" />
-</View>
-<Text className="text-xs mt-1 text-muted-foreground">Bookings</Text>
-</TouchableOpacity>
-
-<TouchableOpacity className="items-center">
-<View className="w-6 h-6 items-center justify-center">
 <User size={22} color="#E91E63" />
 </View>
 <Text className="text-xs mt-1 text-primary font-medium">Profile</Text>

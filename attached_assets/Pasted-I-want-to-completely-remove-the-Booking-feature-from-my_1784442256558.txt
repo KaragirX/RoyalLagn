@@ -1,0 +1,32 @@
+I want to completely remove the Booking feature from my React Native/Expo wedding vendor marketplace app.
+
+IMPORTANT:
+- Do NOT redesign the UI.
+- Do NOT change the color theme, layout, fonts, navigation style, or any unrelated functionality.
+- Only remove the booking feature and everything associated with it.
+
+Please perform the following tasks:
+
+1. Remove the "Bookings" tab from the bottom navigation for all users.
+2. Delete all booking-related screens, components, routes, and navigation entries.
+3. Remove all "Book Now", "Book", "Request Booking", "Confirm Booking", "My Bookings", and similar buttons throughout the app.
+4. Remove every booking-related API call, service, hook, utility, and state management logic.
+5. Remove booking models, interfaces, types, validation schemas, and constants.
+6. Remove booking-related backend endpoints and controllers if they exist in this project.
+7. Remove booking collections/models from the backend if they are no longer used.
+8. Remove booking notifications, booking history, booking status, and booking analytics.
+9. Remove booking management from the vendor dashboard.
+10. Remove booking statistics from the admin dashboard.
+11. Remove all booking-related permissions, roles, and menu items.
+12. Remove any booking-related imports so there are no unused imports or build errors.
+13. Update navigation so there are no broken routes or references.
+14. Ensure the application builds successfully with zero TypeScript/JavaScript errors after the removal.
+
+After removing the booking feature:
+- Vendors should only manage their profile, gallery, services, pricing, subscriptions (if present), and account settings.
+- Customers should only browse vendors, search, filter, favorite vendors, view vendor profiles, and contact vendors (if available).
+- The overall UI and user experience should remain exactly the same except that the booking functionality no longer exists.
+
+Finally:
+- Search the entire project for any remaining references to "booking", "bookings", "Book", or related functionality and remove them.
+- Verify that the app runs successfully without runtime or compilation errors.

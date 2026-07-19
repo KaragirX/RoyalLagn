@@ -10,7 +10,7 @@ Pressable,
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { Menu, Bell, Eye, Heart, MessageCircle, Star, ChevronRight, Edit3, HeartHandshake, Package, Tag, MessageSquare, Calendar, Settings, Share2, Megaphone, ExternalLink, Headphones, Grid3X3, MessageSquareText, CalendarDays, User, ImageIcon } from "lucide-react-native";
+import { Menu, Bell, Eye, Heart, MessageCircle, Star, ChevronRight, Edit3, HeartHandshake, Package, Tag, MessageSquare, Calendar, Settings, Share2, Megaphone, ExternalLink, Headphones, Grid3X3, MessageSquareText, User, ImageIcon } from "lucide-react-native";
 
 type ProfileItem = {
 id: string;
@@ -113,7 +113,6 @@ href?: string;
 const tabs: TabItem[] = [
 { id: "dashboard", title: "Dashboard", icon: Grid3X3, active: true },
 { id: "enquiries", title: "Enquiries", icon: MessageSquareText },
-{ id: "bookings", title: "Bookings", icon: CalendarDays },
 { id: "profile", title: "Profile", icon: User, href: "/Vendors_dash_profile" },
 ];
 

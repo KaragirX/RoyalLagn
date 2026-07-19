@@ -1,10 +1,9 @@
 import { Tabs } from 'expo-router';
-import { Home, Grid3X3, Calendar, Heart, User } from 'lucide-react-native';
+import { Home, Grid3X3, Heart, User } from 'lucide-react-native';
 import { cssInterop, useColorScheme } from 'nativewind';
 
 cssInterop(Home,     { className: { target: 'style', nativeStyleToProp: { color: true } } });
 cssInterop(Grid3X3,  { className: { target: 'style', nativeStyleToProp: { color: true } } });
-cssInterop(Calendar, { className: { target: 'style', nativeStyleToProp: { color: true } } });
 cssInterop(Heart,    { className: { target: 'style', nativeStyleToProp: { color: true } } });
 cssInterop(User,     { className: { target: 'style', nativeStyleToProp: { color: true } } });
 
@@ -51,19 +50,6 @@ export default function TabsLayout() {
                     title: 'Category',
                     tabBarIcon: ({ focused }) => (
                         <Grid3X3
-                            className={focused ? 'text-primary' : 'text-muted-foreground'}
-                            size={22}
-                            strokeWidth={focused ? 2.5 : 2}
-                        />
-                    ),
-                }}
-            />
-            <Tabs.Screen
-                name="bookings"
-                options={{
-                    title: 'Bookings',
-                    tabBarIcon: ({ focused }) => (
-                        <Calendar
                             className={focused ? 'text-primary' : 'text-muted-foreground'}
                             size={22}
                             strokeWidth={focused ? 2.5 : 2}
