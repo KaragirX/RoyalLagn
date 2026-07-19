@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
@@ -184,6 +185,12 @@ export default function VendorsAdminListing() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const filteredVendors = vendors.filter((vendor) => {
+    const matchesSearch = vendor.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
+    const selected = categories.find((category) => category.id === selectedCategory);
+    return matchesSearch && (selectedCategory === "all" || vendor.category === selected?.name);
+  });
 
   return (
     <SafeAreaView
@@ -196,11 +203,11 @@ export default function VendorsAdminListing() {
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-6 py-4">
-          <TouchableOpacity className="p-2 -ml-2">
+          <TouchableOpacity className="p-2 -ml-2" onPress={() => router.push("/admin-dash-logout")}>
             <Menu size={24} className="text-foreground" />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-primary">RoyalLagn</Text>
-          <TouchableOpacity className="p-2 -mr-2 relative">
+          <TouchableOpacity className="p-2 -mr-2 relative" onPress={() => router.push("/AdminSettings")}>
             <Bell size={24} className="text-foreground" />
             <View className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
           </TouchableOpacity>
@@ -227,7 +234,7 @@ export default function VendorsAdminListing() {
                 placeholderTextColor={isDark ? "#A8A29E" : "#78716C"}
               />
             </View>
-            <TouchableOpacity className="w-12 h-12 bg-card border border-border rounded-xl items-center justify-center">
+            <TouchableOpacity className="w-12 h-12 bg-card border border-border rounded-xl items-center justify-center" onPress={() => { setSearchQuery(""); setSelectedCategory("all"); }}>
               <SlidersHorizontal size={20} className="text-primary" />
             </TouchableOpacity>
           </View>
@@ -246,6 +253,7 @@ export default function VendorsAdminListing() {
                   key={category.id}
                   className="items-center"
                   style={{ width: "22%" }}
+                  onPress={() => setSelectedCategory(category.id)}
                 >
                   <View
                     className="w-14 h-14 rounded-2xl items-center justify-center mb-2"
@@ -262,7 +270,7 @@ export default function VendorsAdminListing() {
                 </TouchableOpacity>
               );
             })}
-            <TouchableOpacity className="items-center" style={{ width: "22%" }}>
+            <TouchableOpacity className="items-center" style={{ width: "22%" }} onPress={() => router.push("/AdminCategories")}>
               <View
                 className="w-14 h-14 rounded-2xl items-center justify-center mb-2"
                 style={{ backgroundColor: isDark ? "#2A2A2A" : "#F5F5F4" }}
@@ -286,7 +294,7 @@ export default function VendorsAdminListing() {
           </Text>
 
           <View className="gap-3">
-            {vendors.map((vendor) => {
+            {filteredVendors.map((vendor) => {
               const statusColors = getStatusColor(vendor.status);
               return (
                 <View
@@ -314,7 +322,7 @@ export default function VendorsAdminListing() {
                             {vendor.status}
                           </Text>
                         </View>
-                        <TouchableOpacity className="p-1">
+                        <TouchableOpacity className="p-1" onPress={() => Alert.alert("Vendor Actions", `Manage ${vendor.name}`)}>
                           <MoreVertical
                             size={16}
                             className="text-muted-foreground"
@@ -344,6 +352,7 @@ export default function VendorsAdminListing() {
             <TouchableOpacity
               disabled={currentPage === 1}
               className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center opacity-50"
+              onPress={() => setCurrentPage((page) => Math.max(1, page - 1))}
             >
               <ChevronLeft size={16} className="text-foreground" />
             </TouchableOpacity>
@@ -370,11 +379,11 @@ export default function VendorsAdminListing() {
 
             <Text className="text-muted-foreground text-sm">...</Text>
 
-            <TouchableOpacity className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center">
+            <TouchableOpacity className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center" onPress={() => setCurrentPage(42)}>
               <Text className="text-foreground text-sm font-medium">42</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center">
+            <TouchableOpacity className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center" onPress={() => setCurrentPage((page) => Math.min(42, page + 1))}>
               <ChevronRight size={16} className="text-foreground" />
             </TouchableOpacity>
           </View>
@@ -396,7 +405,7 @@ export default function VendorsAdminListing() {
                 </Text>
               </View>
             </View>
-            <TouchableOpacity className="bg-secondary px-4 py-2 rounded-full">
+            <TouchableOpacity className="bg-secondary px-4 py-2 rounded-full" onPress={() => { setSelectedCategory("all"); setSearchQuery("Glam Touch Makeup"); }}>
               <Text className="text-secondary-foreground text-sm font-medium">
                 View List
               </Text>

@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Heart, Star, MapPin, Search, Grid2x2, List } from "lucide-react-native";
+import { Heart, Star, MapPin, Grid2x2, List } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { useRouter } from "expo-router";
 import { useFavorites, FavoriteVendor } from "@/context/FavoritesContext";
@@ -123,7 +123,7 @@ export default function FavoritesScreen() {
                   isDark={isDark}
                   text={text}
                   muted={muted}
-                  onPress={() => router.push({ pathname: "/VendorsProfile" as any, params: { vendorId: vendor.id, category: vendor.category } })}
+                  onPress={() => router.push({ pathname: "/VendorsProfile", params: { vendorId: vendor.id, category: vendor.category } })}
                   onRemove={() => setConfirmId(vendor.id)}
                 />
               ))}
@@ -144,7 +144,7 @@ export default function FavoritesScreen() {
                 muted={muted}
                 border={border}
                 isDark={isDark}
-                onPress={() => router.push({ pathname: "/VendorsProfile" as any, params: { vendorId: vendor.id, category: vendor.category } })}
+                onPress={() => router.push({ pathname: "/VendorsProfile", params: { vendorId: vendor.id, category: vendor.category } })}
                 onRemove={() => setConfirmId(vendor.id)}
               />
             ))}
@@ -297,7 +297,7 @@ function EmptyState({ isDark, text, muted, router, hasAny, selectedCat }: {
       </Text>
       <TouchableOpacity
         style={s.exploreBtn}
-        onPress={() => router.push("/(tabs)/Categories" as any)}
+        onPress={() => router.push("/(tabs)/Categories")}
       >
         <Heart size={16} color="#FFF" style={{ marginRight: 6 }} />
         <Text style={s.exploreTxt}>Browse Vendors</Text>

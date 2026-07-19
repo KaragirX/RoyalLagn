@@ -1,7 +1,6 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useColorScheme } from "nativewind";
 import { useRouter } from "expo-router";
 import {
   Menu,
@@ -14,10 +13,6 @@ import {
   CheckCircle,
   ChevronRight,
   Download,
-  Users,
-  Crown,
-  BarChart3,
-  MoreHorizontal,
 } from "lucide-react-native";
 import AdminFooter from "@/components/AdminFooter";
 
@@ -186,9 +181,9 @@ const transactions: Transaction[] = [
 ];
 
 export default function PaymentsAdmin() {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
   const router = useRouter();
+  const showPlaceholder = (title: string) =>
+    Alert.alert(title, `${title} is available as a local frontend placeholder.`);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -227,11 +222,11 @@ export default function PaymentsAdmin() {
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-6 py-4">
-          <TouchableOpacity className="p-2 -ml-2">
+          <TouchableOpacity className="p-2 -ml-2" onPress={() => router.push("/admin-dash-logout")}>
             <Menu size={24} className="text-foreground" />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-primary">RoyalLagn</Text>
-          <TouchableOpacity className="p-2 -mr-2 relative">
+          <TouchableOpacity className="p-2 -mr-2 relative" onPress={() => showPlaceholder("Payment Notifications")}>
             <Bell size={24} className="text-foreground" />
             <View className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
           </TouchableOpacity>
@@ -248,19 +243,19 @@ export default function PaymentsAdmin() {
         {/* Date Filters */}
         <View className="px-6 mb-6">
           <View className="flex-row items-center gap-2">
-            <TouchableOpacity className="flex-row items-center bg-card border border-border rounded-lg px-3 py-2">
+            <TouchableOpacity className="flex-row items-center bg-card border border-border rounded-lg px-3 py-2" onPress={() => showPlaceholder("Select Day")}>
               <Text className="text-foreground text-sm mr-2">20</Text>
               <ChevronDown size={14} className="text-foreground" />
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center bg-card border border-border rounded-lg px-3 py-2">
+            <TouchableOpacity className="flex-row items-center bg-card border border-border rounded-lg px-3 py-2" onPress={() => showPlaceholder("Select Month")}>
               <Text className="text-foreground text-sm mr-2">May</Text>
               <ChevronDown size={14} className="text-foreground" />
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center bg-card border border-border rounded-lg px-3 py-2">
+            <TouchableOpacity className="flex-row items-center bg-card border border-border rounded-lg px-3 py-2" onPress={() => showPlaceholder("Select Year")}>
               <Text className="text-foreground text-sm mr-2">2025</Text>
               <ChevronDown size={14} className="text-foreground" />
             </TouchableOpacity>
-            <TouchableOpacity className="w-10 h-10 bg-primary rounded-lg items-center justify-center ml-auto">
+            <TouchableOpacity className="w-10 h-10 bg-primary rounded-lg items-center justify-center ml-auto" onPress={() => showPlaceholder("Apply Payment Filters")}>
               <Filter size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -314,6 +309,7 @@ export default function PaymentsAdmin() {
                     ? "border-b border-border"
                     : ""
                 }`}
+                onPress={() => Alert.alert("Transaction Details", `${transaction.vendorName}\n${transaction.amount}\n${transaction.status}`)}
               >
                 <View className="mr-3">
                   {getStatusIcon(transaction.status)}
@@ -350,7 +346,7 @@ export default function PaymentsAdmin() {
 
         {/* Download Report Button */}
         <View className="px-6 mb-6">
-          <TouchableOpacity className="flex-row items-center justify-center bg-card border border-primary rounded-xl py-3">
+          <TouchableOpacity className="flex-row items-center justify-center bg-card border border-primary rounded-xl py-3" onPress={() => showPlaceholder("Download Payment Report")}>
             <Download size={18} color="#E91E63" />
             <Text className="text-primary font-medium text-sm ml-2">
               Download Report

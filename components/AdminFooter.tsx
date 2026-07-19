@@ -1,16 +1,13 @@
 import React from "react";
 import { View, TouchableOpacity, Text } from "react-native";
 import { useColorScheme } from "nativewind";
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import {
   BarChart3,
   Users,
   Crown,
   Wallet,
   MoreHorizontal,
-  Grid2x2,
-  Building2,
-  CreditCard,
 } from "lucide-react-native";
 
 type TabKey = "dashboard" | "vendors" | "subscriptions" | "payments" | "more";
@@ -19,7 +16,7 @@ type TabItem = {
   key: TabKey;
   label: string;
   icon: React.ElementType;
-  route: string;
+  route: Href;
 };
 
 const tabs: TabItem[] = [

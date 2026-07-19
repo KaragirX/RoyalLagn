@@ -5,10 +5,10 @@ import {
   ScrollView,
   TextInput,
   Image,
-  ImageBackground,
   TouchableOpacity,
   StyleSheet,
   useWindowDimensions,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -34,6 +34,8 @@ import {
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useColorScheme } from "nativewind";
+import { useFavorites } from "@/context/FavoritesContext";
+import { getVendorById } from "@/data/vendorData";
 
 const PINK = "#E91E63";
 
@@ -67,8 +69,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [favorites, setFavorites] = useState<string[]>([]);
   const [searchText, setSearchText] = useState("");
+  const { isFavorite, toggleFavorite } = useFavorites();
   const { width: screenWidth } = useWindowDimensions();
   const heroCardWidth = screenWidth - 32;
   const heroHeight = Math.min(Math.round(heroCardWidth * (897 / 1754)), 240);
@@ -80,10 +82,9 @@ export default function HomeScreen() {
   const muted  = isDark ? "#AAA0A5" : "#6B7280";
   const border = isDark ? "#2A2A2A" : "#E5E7EB";
 
-  const toggleFavorite = (id: string) =>
-    setFavorites((p) => p.includes(id) ? p.filter((f) => f !== id) : [...p, id]);
-
   const catNameForNav = (name: string) => name.replace(/\n/g, " ");
+  const submitSearch = () =>
+    router.push({ pathname: "/Search", params: { query: searchText.trim() } });
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: bg }]} edges={["top"]}>
@@ -91,7 +92,7 @@ export default function HomeScreen() {
 
         {/* ── Header ── */}
         <View style={s.header}>
-          <TouchableOpacity style={s.locRow}>
+          <TouchableOpacity style={s.locRow} onPress={() => Alert.alert("Location", "Current location: Pune, Maharashtra")}>
             <MapPin size={13} color={PINK} />
             <Text style={[s.locText, { color: muted }]}>Pune, Maharashtra</Text>
           </TouchableOpacity>
@@ -103,7 +104,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          <TouchableOpacity style={s.bellWrap}>
+          <TouchableOpacity style={s.bellWrap} onPress={() => Alert.alert("Notifications", "You have 1 new notification.")}>
             <Bell size={22} color={text} />
             <View style={s.badge}><Text style={s.badgeTxt}>1</Text></View>
           </TouchableOpacity>
@@ -130,11 +131,12 @@ export default function HomeScreen() {
               value={searchText}
               onChangeText={setSearchText}
               returnKeyType="search"
+              onSubmitEditing={submitSearch}
             />
           </View>
           <TouchableOpacity
             style={s.filterBtn}
-            onPress={() => router.push("/(tabs)/Categories" as any)}
+            onPress={() => router.push({ pathname: "/Search", params: { query: searchText.trim() } })}
           >
             <SlidersHorizontal size={14} color={PINK} />
             <Text style={s.filterTxt}>Filters</Text>
@@ -163,7 +165,7 @@ export default function HomeScreen() {
                 </Text>
                 <TouchableOpacity
                   style={s.exploreBtn}
-                  onPress={() => router.push("/(tabs)/Categories" as any)}
+                  onPress={() => router.push("/(tabs)/Categories")}
                 >
                   <Text style={s.exploreTxt}>Explore Vendors</Text>
                   <ChevronRight size={14} color="#FFF" />
@@ -185,7 +187,7 @@ export default function HomeScreen() {
             <Text style={[s.sectionTitle, { color: text }]}>Top Categories</Text>
             <TouchableOpacity
               style={s.viewAllRow}
-              onPress={() => router.push("/(tabs)/Categories" as any)}
+              onPress={() => router.push("/(tabs)/Categories")}
             >
               <Text style={s.viewAll}>View All</Text>
               <ChevronRight size={13} color={PINK} />
@@ -203,9 +205,9 @@ export default function HomeScreen() {
                   style={s.catItem}
                   onPress={() =>
                     cat.id === "15"
-                      ? router.push("/(tabs)/Categories" as any)
+                      ? router.push("/(tabs)/Categories")
                       : router.push({
-                          pathname: "/VendorsListing" as any,
+                          pathname: "/VendorsListing",
                           params: { category: catNameForNav(cat.name) },
                         })
                   }
@@ -229,7 +231,7 @@ export default function HomeScreen() {
             <Text style={[s.sectionTitle, { color: text }]}>Popular Near You</Text>
             <TouchableOpacity
               style={s.viewAllRow}
-              onPress={() => router.push("/(tabs)/Categories" as any)}
+              onPress={() => router.push("/(tabs)/Categories")}
             >
               <Text style={s.viewAll}>View All</Text>
               <ChevronRight size={13} color={PINK} />
@@ -242,14 +244,15 @@ export default function HomeScreen() {
             contentContainerStyle={s.vendorScroll}
           >
             {popularVendors.map((v) => {
-              const isFav = favorites.includes(v.id);
+              const isFav = isFavorite(v.id);
+              const vendorResult = getVendorById(v.id);
               return (
                 <TouchableOpacity
                   key={v.id}
                   style={[s.vendorCard, { backgroundColor: card }]}
                   onPress={() =>
                     router.push({
-                      pathname: "/VendorsProfile" as any,
+                      pathname: "/VendorsProfile",
                       params: { vendorId: v.id, category: v.category },
                     })
                   }
@@ -262,7 +265,12 @@ export default function HomeScreen() {
                     {/* Heart */}
                     <TouchableOpacity
                       style={[s.heartBtn, isFav && s.heartBtnActive]}
-                      onPress={(e) => { e.stopPropagation(); toggleFavorite(v.id); }}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        if (vendorResult) {
+                          toggleFavorite({ ...vendorResult.vendor, category: vendorResult.category });
+                        }
+                      }}
                     >
                       <Heart size={12} color="#FFF" fill={isFav ? "#FFF" : "transparent"} />
                     </TouchableOpacity>
@@ -318,7 +326,9 @@ export default function HomeScreen() {
               </Text>
               <TouchableOpacity
                 style={s.registerBtn}
-                onPress={() => router.push("/vendor-dashboard" as any)}
+                onPress={() => {
+                  router.push("/vendor-dashboard");
+                }}
               >
                 <Text style={s.registerTxt}>Register Now</Text>
                 <ChevronRight size={13} color="#FFF" />

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
@@ -21,7 +22,6 @@ import {
   Star,
   BarChart3,
   UserPlus,
-  MoreHorizontal,
   ChevronRight,
 } from "lucide-react-native";
 
@@ -195,37 +195,15 @@ export default function AdminDashboard() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const router = useRouter();
-
-  const chartData = {
-    labels: ["May 20", "", "Jun 03", "", "Jun 17"],
-    datasets: [
-      {
-        data: [20000, 35000, 28000, 55000, 42000, 72680, 65000],
-        color: () => "#E91E63",
-        strokeWidth: 2,
-      },
-    ],
-  };
-
-  const chartConfig = {
-    backgroundColor: "transparent",
-    backgroundGradientFrom: isDark ? "#141414" : "#FFFFFF",
-    backgroundGradientTo: isDark ? "#141414" : "#FFFFFF",
-    decimalPlaces: 0,
-    color: () => "#E91E63",
-    labelColor: () => (isDark ? "#A8A29E" : "#78716C"),
-    style: {
-      borderRadius: 16,
-    },
-    propsForDots: {
-      r: "4",
-      strokeWidth: "2",
-      stroke: "#E91E63",
-    },
-    propsForBackgroundLines: {
-      stroke: isDark ? "#2A2A2A" : "#F5EBE9",
-      strokeWidth: 1,
-    },
+  const showPlaceholder = (title: string) =>
+    Alert.alert(title, `${title} is available as a local frontend placeholder.`);
+  const handleQuickAction = (id: string) => {
+    if (id === "add-vendor") return router.push("/vendors-admin-listing");
+    if (id === "subscriptions") return router.push("/subscriptions-admin");
+    if (id === "payments") return router.push("/payments-admin");
+    if (id === "enquiries") return router.push("/AdminUsers");
+    if (id === "reviews") return router.push("/AdminCategories");
+    router.push("/AdminReports");
   };
 
   return (
@@ -239,11 +217,11 @@ export default function AdminDashboard() {
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-6 py-4">
-          <TouchableOpacity className="p-2 -ml-2">
+          <TouchableOpacity className="p-2 -ml-2" onPress={() => router.push("/admin-dash-logout")}>
             <Menu size={24} className="text-foreground" />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-primary">RoyalLagn</Text>
-          <TouchableOpacity className="p-2 -mr-2 relative">
+          <TouchableOpacity className="p-2 -mr-2 relative" onPress={() => router.push("/AdminSettings")}>
             <Bell size={24} className="text-foreground" />
             <View className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
           </TouchableOpacity>
@@ -257,10 +235,10 @@ export default function AdminDashboard() {
                 Welcome back,{"\n"}Admin 👋
               </Text>
               <Text className="text-muted-foreground text-sm mt-1">
-                Here's what's happening on{"\n"}your platform today.
+                {"Here's what's happening on"}{"\n"}your platform today.
               </Text>
             </View>
-            <TouchableOpacity className="flex-row items-center bg-card border border-border rounded-full px-3 py-1.5">
+            <TouchableOpacity className="flex-row items-center bg-card border border-border rounded-full px-3 py-1.5" onPress={() => showPlaceholder("Dashboard Date Range")}>
               <Text className="text-foreground text-sm mr-1">This Month</Text>
               <ChevronDown size={14} className="text-foreground" />
             </TouchableOpacity>
@@ -310,7 +288,7 @@ export default function AdminDashboard() {
               <Text className="text-foreground font-semibold text-base">
                 Revenue Overview
               </Text>
-              <TouchableOpacity className="flex-row items-center bg-muted rounded-full px-3 py-1">
+              <TouchableOpacity className="flex-row items-center bg-muted rounded-full px-3 py-1" onPress={() => showPlaceholder("Revenue Date Range")}>
                 <Text className="text-foreground text-xs mr-1">This Month</Text>
                 <ChevronDown size={12} className="text-foreground" />
               </TouchableOpacity>
@@ -361,6 +339,7 @@ export default function AdminDashboard() {
                   key={action.id}
                   className="items-center"
                   style={{ width: (screenWidth - 24) / 3 }}
+                  onPress={() => handleQuickAction(action.id)}
                 >
                   <View
                     className="w-14 h-14 rounded-2xl items-center justify-center mb-2"
@@ -383,7 +362,7 @@ export default function AdminDashboard() {
             <Text className="text-foreground font-semibold text-base">
               Recent Subscriptions
             </Text>
-            <TouchableOpacity className="flex-row items-center">
+            <TouchableOpacity className="flex-row items-center" onPress={() => router.push("/subscriptions-admin")}>
               <Text className="text-primary text-sm mr-1">View All</Text>
               <ChevronRight size={16} className="text-primary" />
             </TouchableOpacity>
@@ -432,7 +411,7 @@ export default function AdminDashboard() {
             <Text className="text-foreground font-semibold text-base">
               Recent Enquiries
             </Text>
-            <TouchableOpacity className="flex-row items-center">
+            <TouchableOpacity className="flex-row items-center" onPress={() => router.push("/AdminUsers")}>
               <Text className="text-primary text-sm mr-1">View All</Text>
               <ChevronRight size={16} className="text-primary" />
             </TouchableOpacity>

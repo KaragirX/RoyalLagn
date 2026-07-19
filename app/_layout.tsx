@@ -7,6 +7,10 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 
+export const unstable_settings = {
+  initialRouteName: "DashboardCenter",
+};
+
 // Error Boundary Component
 function ErrorBoundary({ children }: { children: React.ReactNode }) {
   const [hasError, setHasError] = useState(false);

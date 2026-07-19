@@ -5,7 +5,8 @@ Text,
 ScrollView,
 TouchableOpacity,
 Image,
-Pressable,
+Alert,
+Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -146,12 +147,25 @@ const router = useRouter();
 const { colorScheme } = useColorScheme();
 const isDark = colorScheme === "dark";
 const [activeTab, setActiveTab] = useState("dashboard");
+const showPlaceholder = (title: string) =>
+Alert.alert(title, `${title} is available as a local frontend placeholder.`);
 
 const handleTabPress = (tabId: string) => {
 setActiveTab(tabId);
 if (tabId === "profile") {
-router.push("/VendorsProfile");
+router.push("/Vendors_dash_profile");
 }
+};
+const handleQuickAction = (actionId: string) => {
+if (actionId === "view" || actionId === "preview") {
+router.push({ pathname: "/VendorsProfile", params: { vendorId: "p1", category: "Photographers" } });
+return;
+}
+if (actionId === "share") {
+Share.share({ message: "View Magic Moments Photography on RoyalLagn." });
+return;
+}
+showPlaceholder("Promote Business");
 };
 
 return (
@@ -161,7 +175,7 @@ edges={["top", "left", "right"]}
 >
 {/* Header */}
 <View className="flex-row items-center justify-between px-4 py-3">
-<TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full bg-muted">
+<TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full bg-muted" onPress={() => router.push("/Vendors_dash_profile")}>
 <Menu size={20} className="text-foreground" />
 </TouchableOpacity>
 
@@ -169,7 +183,7 @@ edges={["top", "left", "right"]}
 Royal<Text className="text-foreground">Lagn</Text>
 </Text>
 
-<TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full bg-muted relative" onPress={() => router.replace("/DashboardCenter" as any)}>
+<TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full bg-muted relative" onPress={() => router.push("/VendorNotifications")}>
 <Bell size={20} className="text-foreground" />
 <View className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full items-center justify-center">
 <Text className="text-white text-xs font-bold">3</Text>
@@ -214,7 +228,7 @@ resizeMode="cover"
 <Text className="text-foreground font-bold text-base">
 Profile Overview
 </Text>
-<TouchableOpacity className="flex-row items-center">
+<TouchableOpacity className="flex-row items-center" onPress={() => router.push({ pathname: "/VendorsProfile", params: { vendorId: "p1", category: "Photographers" } })}>
 <Text className="text-primary text-sm font-medium">
 View Public Profile
 </Text>
@@ -268,6 +282,13 @@ return (
 <TouchableOpacity
 key={item.id}
 className="flex-row items-center p-3 bg-card rounded-xl border border-border"
+onPress={() => {
+if (item.id === "business" || item.id === "about") router.push("/VendorEditProfile");
+else if (item.id === "services" || item.id === "pricing") router.push("/VendorServices");
+else if (item.id === "portfolio") router.push("/VendorGallery");
+else if (item.id === "seo") router.push("/VendorSettings");
+else Alert.alert(item.title, `${item.subtitle}. Changes are kept locally.`);
+}}
 >
 <View
 className="w-10 h-10 rounded-xl items-center justify-center mr-3"
@@ -312,7 +333,7 @@ Quick Actions
 {quickActions.map((action) => {
 const Icon = action.icon;
 return (
-<TouchableOpacity key={action.id} className="items-center">
+<TouchableOpacity key={action.id} className="items-center" onPress={() => handleQuickAction(action.id)}>
 <View
 className="w-14 h-14 rounded-2xl items-center justify-center mb-2"
 style={{ backgroundColor: `${action.color}15` }}
@@ -336,9 +357,9 @@ style={{ backgroundColor: `${action.color}15` }}
 Need Help?
 </Text>
 <Text className="text-muted-foreground text-xs mb-3">
-We're here to help you grow your business
+{"We're here to help you grow your business"}
 </Text>
-<TouchableOpacity className="bg-primary px-4 py-2 rounded-full self-start">
+<TouchableOpacity className="bg-primary px-4 py-2 rounded-full self-start" onPress={() => router.push("/VendorHelp")}>
 <Text className="text-white text-xs font-medium">
 Contact Support
 </Text>

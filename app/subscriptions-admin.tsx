@@ -4,7 +4,7 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
@@ -17,10 +17,6 @@ import {
   Crown,
   Calendar,
   XCircle,
-  Grid2x2,
-  UsersRound,
-  CreditCard,
-  MoreHorizontal,
   Star,
   Info,
 } from "lucide-react-native";
@@ -131,12 +127,12 @@ const subscriptionPlans: PlanCard[] = [
   },
 ];
 
-const screenWidth = Dimensions.get("window").width - 48;
-
 export default function SubscriptionsAdmin() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const router = useRouter();
+  const showPlaceholder = (title: string) =>
+    Alert.alert(title, `${title} is available as a local frontend placeholder.`);
 
   return (
     <SafeAreaView
@@ -149,11 +145,11 @@ export default function SubscriptionsAdmin() {
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-6 py-4">
-          <TouchableOpacity className="p-2 -ml-2">
+          <TouchableOpacity className="p-2 -ml-2" onPress={() => router.push("/admin-dash-logout")}>
             <Menu size={24} className="text-foreground" />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-primary">RoyalLagn</Text>
-          <TouchableOpacity className="p-2 -mr-2 relative">
+          <TouchableOpacity className="p-2 -mr-2 relative" onPress={() => showPlaceholder("Subscription Notifications")}>
             <Bell size={24} className="text-foreground" />
             <View className="absolute top-1 right-1 w-5 h-5 bg-destructive rounded-full items-center justify-center">
               <Text className="text-white text-xs font-bold">12</Text>
@@ -173,7 +169,7 @@ export default function SubscriptionsAdmin() {
 
         {/* Date Dropdown */}
         <View className="px-6 mb-6">
-          <TouchableOpacity className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3 self-start">
+          <TouchableOpacity className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3 self-start" onPress={() => showPlaceholder("Subscription Month")}>
             <Calendar size={18} className="text-foreground mr-2" />
             <Text className="text-foreground font-medium mr-2">May 2025</Text>
             <ChevronDown size={16} className="text-foreground" />

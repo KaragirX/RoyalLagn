@@ -5,6 +5,7 @@ Text,
 ScrollView,
 TouchableOpacity,
 Image,
+Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -35,8 +36,9 @@ CheckCircle2,
 
 export default function VendorsDashProfile() {
 const router = useRouter();
-const { colorScheme } = useColorScheme();
-const isDark = colorScheme === "dark";
+useColorScheme();
+const showPlaceholder = (title: string) =>
+Alert.alert(title, `${title} is available as a local frontend placeholder.`);
 
 const accountInfo = [
 {
@@ -149,7 +151,7 @@ onPress={() => router.back()}
 
 <Text className="text-xl font-bold text-foreground">Profile</Text>
 
-<TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full bg-muted">
+<TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full bg-muted" onPress={() => router.push("/VendorEditProfile")}>
 <Edit3 size={20} className="text-foreground" />
 </TouchableOpacity>
 </View>
@@ -219,7 +221,7 @@ Valid till 15 Jun 2025
 </Text>
 </View>
 </View>
-<TouchableOpacity className="bg-primary px-4 py-2 rounded-full">
+<TouchableOpacity className="bg-primary px-4 py-2 rounded-full" onPress={() => router.push("/VendorSubscription")}>
 <Text className="text-white text-xs font-medium">View Plan</Text>
 </TouchableOpacity>
 </View>
@@ -239,6 +241,7 @@ key={item.id}
 className={`flex-row items-center p-4 ${
 index !== accountInfo.length - 1 ? "border-b border-border" : ""
 }`}
+onPress={() => router.push("/VendorEditProfile")}
 >
 <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
 <Icon size={18} color="#E91E63" />
@@ -272,6 +275,7 @@ key={item.id}
 className={`flex-row items-center p-4 ${
 index !== businessInfo.length - 1 ? "border-b border-border" : ""
 }`}
+onPress={() => router.push("/VendorEditProfile")}
 >
 <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
 <Icon size={18} color="#E91E63" />
@@ -307,7 +311,17 @@ index !== supportSettings.length - 1 ? "border-b border-border" : ""
 }`}
 onPress={() => {
 if (item.id === "logout") {
-router.replace("/DashboardCenter" as any);
+router.replace("/DashboardCenter");
+} else if (item.id === "support") {
+router.push("/VendorHelp");
+} else if (item.id === "help") {
+router.push("/VendorHelp");
+} else if (item.id === "privacy") {
+router.push("/PrivacyPolicy");
+} else if (item.id === "terms") {
+router.push("/Terms");
+} else {
+showPlaceholder(item.label);
 }
 }}
 >
@@ -352,14 +366,14 @@ onPress={() => router.push("/vendor-dashboard")}
 <Text className="text-xs mt-1 text-muted-foreground">Dashboard</Text>
 </TouchableOpacity>
 
-<TouchableOpacity className="items-center">
+<TouchableOpacity className="items-center" onPress={() => showPlaceholder("Vendor Enquiries")}>
 <View className="w-6 h-6 items-center justify-center">
 <View className="w-5 h-5 border-2 border-muted-foreground rounded-full" />
 </View>
 <Text className="text-xs mt-1 text-muted-foreground">Enquiries</Text>
 </TouchableOpacity>
 
-<TouchableOpacity className="items-center">
+<TouchableOpacity className="items-center" onPress={() => showPlaceholder("Vendor Profile")}>
 <View className="w-6 h-6 items-center justify-center">
 <User size={22} color="#E91E63" />
 </View>

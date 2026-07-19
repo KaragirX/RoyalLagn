@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { LogOut, Shield, ChevronRight } from "lucide-react-native";
 import AdminFooter from "@/components/AdminFooter";
@@ -11,14 +11,16 @@ type MenuItem = {
   title: string;
   icon: React.ElementType;
   color: string;
-  route?: string;
+  route?: Href;
   action?: () => void;
 };
 
 export default function AdminDashLogout() {
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  useColorScheme();
+  const performLogout = () => {
+    router.replace("/DashboardCenter");
+  };
 
   const menuItems: MenuItem[] = [
     {
@@ -26,21 +28,21 @@ export default function AdminDashLogout() {
       title: "Admin Profile",
       icon: Shield,
       color: "#3B82F6",
-      route: "/admin-dashboard",
+      route: "/AdminUsers",
     },
     {
       id: "settings",
       title: "Settings",
       icon: Shield,
       color: "#8B5CF6",
-      route: "/admin-dashboard",
+      route: "/AdminSettings",
     },
     {
       id: "logout",
       title: "Logout",
       icon: LogOut,
       color: "#E91E63",
-      action: () => router.replace("/DashboardCenter"),
+      action: performLogout,
     },
   ];
 
@@ -125,7 +127,7 @@ export default function AdminDashLogout() {
       <View className="px-6 mt-8">
         <TouchableOpacity
           className="bg-destructive rounded-2xl p-4 flex-row items-center justify-center"
-          onPress={() => router.replace("/DashboardCenter")}
+          onPress={performLogout}
         >
           <LogOut size={20} color="#FFFFFF" />
           <Text className="text-white font-semibold text-base ml-2">

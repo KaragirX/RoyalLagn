@@ -8,7 +8,6 @@ User,
 MapPin,
 Phone,
 Mail,
-Settings,
 Bell,
 HelpCircle,
 Shield,
@@ -50,7 +49,6 @@ export default function ProfileScreen() {
 const router = useRouter();
 const { colorScheme } = useColorScheme();
 const isDark = colorScheme === "dark";
-
 return (
 <SafeAreaView
 className="flex-1 bg-background"
@@ -76,6 +74,7 @@ style={{ borderWidth: 3, borderColor: isDark ? '#333333' : '#FBCFE8' }}
 />
 <Pressable
 className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full items-center justify-center border-2 border-card"
+onPress={() => router.push("/EditProfile")}
 >
 <Edit size={14} className="text-white" />
 </Pressable>
@@ -89,7 +88,7 @@ className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full items-cente
 </Text>
 
 <View className="flex-row w-full gap-3">
-<Pressable className="flex-1 bg-primary py-2.5 rounded-full items-center justify-center">
+<Pressable className="flex-1 bg-primary py-2.5 rounded-full items-center justify-center" onPress={() => router.push("/EditProfile")}>
 <Text className="text-primary-foreground font-semibold text-sm">
 Edit Profile
 </Text>
@@ -125,9 +124,9 @@ Edit Profile
 <Text className="text-xs font-semibold text-muted-foreground px-4 pt-4 pb-2 uppercase tracking-wider">
 Account
 </Text>
-<MenuItem icon={User} label="Personal Information" />
-<MenuItem icon={Shield} label="Privacy & Security" />
-<MenuItem icon={Bell} label="Notifications" />
+<MenuItem icon={User} label="Personal Information" onPress={() => router.push("/EditProfile")} />
+<MenuItem icon={Shield} label="Privacy & Security" onPress={() => router.push("/PrivacyPolicy")} />
+<MenuItem icon={Bell} label="Notifications" onPress={() => router.push("/Settings")} />
 </View>
 
 {/* Support & About */}
@@ -135,15 +134,17 @@ Account
 <Text className="text-xs font-semibold text-muted-foreground px-4 pt-4 pb-2 uppercase tracking-wider">
 Support
 </Text>
-<MenuItem icon={HelpCircle} label="Help Center" />
-<MenuItem icon={Shield} label="Terms & Conditions" />
-<MenuItem icon={Mail} label="Contact Us" />
+<MenuItem icon={HelpCircle} label="Help Center" onPress={() => router.push("/Help")} />
+<MenuItem icon={Shield} label="Terms & Conditions" onPress={() => router.push("/Terms")} />
+<MenuItem icon={Mail} label="Contact Us" onPress={() => router.push("/About")} />
 </View>
 
 {/* Logout Button */}
 <Pressable 
 className="bg-destructive/10 rounded-2xl p-4 flex-row items-center justify-center mt-2"
-onPress={() => router.replace('/DashboardCenter')}
+onPress={() => {
+router.replace("/DashboardCenter");
+}}
 >
 <LogOut size={20} className="text-destructive mr-2" />
 <Text className="text-destructive font-semibold text-base">

@@ -13,7 +13,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   useEffect(() => {
     setColorScheme('light');
-  }, []);
+  }, [setColorScheme]);
 
   const themeVars = colorScheme === 'dark' ? darkTheme : lightTheme;
 

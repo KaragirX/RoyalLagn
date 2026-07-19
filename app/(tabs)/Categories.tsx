@@ -197,7 +197,7 @@ export default function CategoriesScreen() {
           <ChevronLeft size={24} color={text} />
         </TouchableOpacity>
         <Text style={[s.headerTitle, { color: text }]}>All Categories</Text>
-        <TouchableOpacity style={s.headerBtn}>
+        <TouchableOpacity style={s.headerBtn} onPress={() => router.push("/(tabs)/favorites")}>
           <Heart size={22} color={text} />
         </TouchableOpacity>
       </View>
@@ -214,7 +214,7 @@ export default function CategoriesScreen() {
             onChangeText={setQuery}
           />
         </View>
-        <TouchableOpacity style={s.filterBtn}>
+        <TouchableOpacity style={s.filterBtn} onPress={() => setQuery("")}>
           <Filter size={18} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
@@ -233,7 +233,7 @@ export default function CategoriesScreen() {
               style={[s.row, { backgroundColor: card, borderColor: border }]}
               onPress={() =>
                 router.push({
-                  pathname: "/VendorsListing" as any,
+                  pathname: "/VendorsListing",
                   params: { category: cat.name },
                 })
               }

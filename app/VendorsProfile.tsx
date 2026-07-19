@@ -6,8 +6,9 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
   Linking,
+  Share,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -28,7 +29,6 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { getVendorById, categoryProfiles } from "@/data/vendorData";
 import { useFavorites } from "@/context/FavoritesContext";
 
-const { width: SCREEN_W } = Dimensions.get("window");
 
 export default function VendorsProfile() {
   const { colorScheme } = useColorScheme();
@@ -85,6 +85,10 @@ export default function VendorsProfile() {
       image: vendor.image,
     });
   };
+  const showPlaceholder = (title: string) =>
+    Alert.alert(title, `${title} is available as a local frontend placeholder.`);
+  const shareVendor = () =>
+    Share.share({ message: `View ${vendor.name} on RoyalLagn — ${vendor.location}` });
 
   return (
     <View style={[styles.root, { backgroundColor: bg }]}>
@@ -98,7 +102,7 @@ export default function VendorsProfile() {
           <TouchableOpacity style={[styles.iconBtn, isFav && styles.iconBtnActive]} onPress={handleToggleFav}>
             <Heart size={20} color={isFav ? "#FFF" : "#141414"} fill={isFav ? "#E91E63" : "transparent"} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
+          <TouchableOpacity style={styles.iconBtn} onPress={shareVendor}>
             <Share2 size={20} color="#141414" />
           </TouchableOpacity>
         </View>
@@ -149,8 +153,8 @@ export default function VendorsProfile() {
             {[
               { icon: Phone,         label: "Call",      color: "#22C55E", bg: "#22C55E18", onPress: () => Linking.openURL("tel:+919876543210") },
               { icon: MessageCircle, label: "WhatsApp",  color: "#22C55E", bg: "#22C55E18", onPress: () => Linking.openURL("https://wa.me/919876543210") },
-              { icon: MessageCircle, label: "Message",   color: "#E91E63", bg: "#E91E6318", onPress: () => {} },
-              { icon: Calendar,      label: "Enquire",   color: "#8B5CF6", bg: "#8B5CF618", onPress: () => {} },
+              { icon: MessageCircle, label: "Message",   color: "#E91E63", bg: "#E91E6318", onPress: () => Linking.openURL("sms:+919876543210") },
+              { icon: Calendar,      label: "Enquire",   color: "#8B5CF6", bg: "#8B5CF618", onPress: () => showPlaceholder("Send Enquiry") },
             ].map(({ icon: Icon, label, color, bg: iconBg, onPress }) => (
               <TouchableOpacity key={label} style={styles.actionItem} onPress={onPress} activeOpacity={0.7}>
                 <View style={[styles.actionCircle, { backgroundColor: iconBg }]}>
@@ -173,7 +177,7 @@ export default function VendorsProfile() {
                 <Text style={[styles.packageSub, { color: muted }]}>Customize packages available</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.viewPkgBtn}>
+            <TouchableOpacity style={styles.viewPkgBtn} onPress={() => showPlaceholder("Packages")}>
               <Text style={styles.viewPkgTxt}>View Packages</Text>
             </TouchableOpacity>
           </View>
@@ -216,7 +220,7 @@ export default function VendorsProfile() {
           <View style={styles.section}>
             <View style={styles.portfolioHeader}>
               <Text style={[styles.sectionTitle, { color: text }]}>Portfolio</Text>
-              <TouchableOpacity style={styles.viewAllRow}>
+              <TouchableOpacity style={styles.viewAllRow} onPress={() => showPlaceholder("Portfolio")}>
                 <Text style={styles.viewAllTxt}>View All</Text>
                 <ChevronRight size={14} color="#E91E63" />
               </TouchableOpacity>
@@ -227,7 +231,7 @@ export default function VendorsProfile() {
               contentContainerStyle={styles.portfolioScroll}
             >
               {portfolioImgs.map((uri, i) => (
-                <TouchableOpacity key={i} activeOpacity={0.85}>
+                <TouchableOpacity key={i} activeOpacity={0.85} onPress={() => Alert.alert("Portfolio Photo", `Photo ${i + 1} of ${portfolioImgs.length}`)}>
                   <Image source={{ uri }} style={styles.portfolioImg} resizeMode="cover" />
                 </TouchableOpacity>
               ))}
@@ -251,7 +255,7 @@ export default function VendorsProfile() {
             </View>
           </View>
         </View>
-        <TouchableOpacity style={styles.quoteBtn}>
+        <TouchableOpacity style={styles.quoteBtn} onPress={() => showPlaceholder("Request Quote")}>
           <Text style={styles.quoteBtnTxt}>Request Quote</Text>
         </TouchableOpacity>
       </SafeAreaView>

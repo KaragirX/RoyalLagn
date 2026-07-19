@@ -50,9 +50,9 @@ export default function VendorsListingScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const router = useRouter();
-  const { category } = useLocalSearchParams<{ category?: string }>();
+  const { category, query: initialQuery } = useLocalSearchParams<{ category?: string; query?: string }>();
 
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(Array.isArray(initialQuery) ? initialQuery[0] : initialQuery ?? "");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -101,10 +101,10 @@ export default function VendorsListingScreen() {
           </View>
         </View>
         <View style={s.headerRight}>
-          <TouchableOpacity onPress={() => router.push("/(tabs)/favorites" as any)}>
+          <TouchableOpacity onPress={() => router.push("/(tabs)/favorites")}>
             <Heart size={22} color={text} />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => setActiveFilter(activeFilter ? null : "Rating")}>
             <Filter size={22} color="#E91E63" />
           </TouchableOpacity>
         </View>
@@ -167,7 +167,7 @@ export default function VendorsListingScreen() {
         <Text style={[s.resultsCount, { color: text }]}>
           {vendors.length * 12}+ {displayCat} Found
         </Text>
-        <TouchableOpacity style={s.popularRow}>
+        <TouchableOpacity style={s.popularRow} onPress={() => setActiveFilter(activeFilter === "Sort" ? null : "Sort")}>
           <Text style={s.popularTxt}>Popular</Text>
           <ChevronDown size={14} color="#E91E63" />
         </TouchableOpacity>
@@ -186,7 +186,7 @@ export default function VendorsListingScreen() {
               style={[s.card, { backgroundColor: card, borderColor: border }]}
               onPress={() =>
                 router.push({
-                  pathname: "/VendorsProfile" as any,
+                  pathname: "/VendorsProfile",
                   params: { vendorId: vendor.id, category: displayCat },
                 })
               }
