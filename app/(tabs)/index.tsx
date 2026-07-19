@@ -129,13 +129,12 @@ export default function HomeScreen() {
               placeholderTextColor={muted}
               value={searchText}
               onChangeText={setSearchText}
-              onSubmitEditing={() => router.push("/(tabs)/search" as any)}
               returnKeyType="search"
             />
           </View>
           <TouchableOpacity
             style={s.filterBtn}
-            onPress={() => router.push("/(tabs)/search" as any)}
+            onPress={() => router.push("/(tabs)/Categories" as any)}
           >
             <SlidersHorizontal size={14} color={PINK} />
             <Text style={s.filterTxt}>Filters</Text>
