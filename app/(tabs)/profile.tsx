@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, ScrollView, Pressable, Image } from "react-native";
+import React, { useState } from "react";
+import { Alert, View, Text, ScrollView, Pressable, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from 'expo-router';
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -16,6 +16,10 @@ ChevronRight,
 Edit,
 } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
+import {
+CloudinaryError,
+pickAndUploadImage,
+} from "@/services/cloudinary";
 
 type MenuItemProps = {
 icon: React.ElementType;
@@ -49,6 +53,34 @@ export default function ProfileScreen() {
 const router = useRouter();
 const { colorScheme } = useColorScheme();
 const isDark = colorScheme === "dark";
+const [profileImageUrl, setProfileImageUrl] = useState(user.avatar);
+const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
+const editProfilePhoto = async () => {
+if (isUploadingPhoto) return;
+
+setIsUploadingPhoto(true);
+try {
+const uploadedUrl = await pickAndUploadImage({
+allowsEditing: true,
+aspect: [1, 1],
+});
+
+if (uploadedUrl) {
+setProfileImageUrl(uploadedUrl);
+}
+} catch (error) {
+Alert.alert(
+"Photo upload failed",
+error instanceof CloudinaryError
+? error.message
+: "Unable to upload the selected photo. Please try again."
+);
+} finally {
+setIsUploadingPhoto(false);
+}
+};
+
 return (
 <SafeAreaView
 className="flex-1 bg-background"
@@ -67,14 +99,17 @@ contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120, gap: 24 }}
 {/* Profile Card */}
 <View className="bg-card rounded-2xl p-6 items-center shadow-sm">
 <View className="relative mb-4">
+<Pressable onPress={editProfilePhoto} disabled={isUploadingPhoto}>
 <Image
-source={{ uri: user.avatar }}
+source={{ uri: profileImageUrl }}
 className="w-24 h-24 rounded-full"
 style={{ borderWidth: 3, borderColor: isDark ? '#333333' : '#FBCFE8' }}
 />
+</Pressable>
 <Pressable
 className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full items-center justify-center border-2 border-card"
-onPress={() => router.push("/EditProfile")}
+onPress={editProfilePhoto}
+disabled={isUploadingPhoto}
 >
 <Edit size={14} className="text-white" />
 </Pressable>

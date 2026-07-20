@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
 View,
 Text,
@@ -33,12 +33,44 @@ LogOut,
 ChevronRight,
 CheckCircle2,
 } from "lucide-react-native";
+import {
+CloudinaryError,
+pickAndUploadImage,
+} from "@/services/cloudinary";
 
 export default function VendorsDashProfile() {
 const router = useRouter();
 useColorScheme();
+const [profileImageUrl, setProfileImageUrl] = useState(
+"https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&auto=format&fit=crop&q=60"
+);
+const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 const showPlaceholder = (title: string) =>
 Alert.alert(title, `${title} is available as a local frontend placeholder.`);
+const editProfilePhoto = async () => {
+if (isUploadingPhoto) return;
+
+setIsUploadingPhoto(true);
+try {
+const uploadedUrl = await pickAndUploadImage({
+allowsEditing: true,
+aspect: [1, 1],
+});
+
+if (uploadedUrl) {
+setProfileImageUrl(uploadedUrl);
+}
+} catch (error) {
+Alert.alert(
+"Photo upload failed",
+error instanceof CloudinaryError
+? error.message
+: "Unable to upload the selected photo. Please try again."
+);
+} finally {
+setIsUploadingPhoto(false);
+}
+};
 
 const accountInfo = [
 {
@@ -163,18 +195,21 @@ showsVerticalScrollIndicator={false}
 {/* Profile Header Section */}
 <View className="items-center px-4 pt-2 pb-6">
 {/* Avatar */}
-<View className="relative">
+<TouchableOpacity
+className="relative"
+activeOpacity={0.8}
+disabled={isUploadingPhoto}
+onPress={editProfilePhoto}
+>
 <Image
-source={{
-uri: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&auto=format&fit=crop&q=60",
-}}
+source={{ uri: profileImageUrl }}
 className="w-24 h-24 rounded-full border-4 border-primary/20"
 resizeMode="cover"
 />
 <View className="absolute bottom-0 right-0 w-7 h-7 bg-primary rounded-full items-center justify-center border-2 border-background">
 <CheckCircle2 size={14} color="#FFFFFF" />
 </View>
-</View>
+</TouchableOpacity>
 
 {/* Business Name */}
 <View className="flex-row items-center mt-3">

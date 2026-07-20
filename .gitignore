@@ -10,3 +10,6 @@ expo-env.d.ts
 
 # Node modules
 node_modules/
+
+# Environment variables
+.env
