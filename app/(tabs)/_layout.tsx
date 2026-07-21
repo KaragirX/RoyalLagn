@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Home, Grid3X3, Heart, User } from 'lucide-react-native';
 import { cssInterop, useColorScheme } from 'nativewind';
+import { MobileTabBar } from '@/components/MobileTabBar';
 
 cssInterop(Home,     { className: { target: 'style', nativeStyleToProp: { color: true } } });
 cssInterop(Grid3X3,  { className: { target: 'style', nativeStyleToProp: { color: true } } });
@@ -13,22 +14,12 @@ export default function TabsLayout() {
 
     return (
         <Tabs
+            tabBar={(props) => <MobileTabBar {...props} />}
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: {
-                    backgroundColor: isDark ? '#141414' : '#FFF1FC',
-                    borderTopColor: isDark ? '#333333' : '#FBCFE8',
-                    height: 65,
-                    paddingBottom: 8,
-                    paddingTop: 8,
-                },
                 tabBarActiveTintColor: isDark ? '#EC4899' : '#E91E63',
                 tabBarInactiveTintColor: isDark ? '#AAA0A5' : '#787178',
-                tabBarLabelStyle: {
-                    fontSize: 11,
-                    fontWeight: '500',
-                    marginTop: 2,
-                },
+                tabBarLabelPosition: 'below-icon',
             }}
         >
             <Tabs.Screen

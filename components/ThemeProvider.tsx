@@ -1,6 +1,6 @@
 // ThemeProvider.tsx
 import { useColorScheme } from 'nativewind';
-import { useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { lightTheme, darkTheme } from '../theme';
 
@@ -8,12 +8,46 @@ interface ThemeProviderProps {
   children: React.ReactNode;
 }
 
+type AppColorScheme = 'light' | 'dark';
+
+type AppThemeContextValue = {
+  colorScheme: AppColorScheme;
+  toggleColorScheme: () => void;
+};
+
+const AppThemeContext = createContext<AppThemeContextValue | null>(null);
+
+export function useAppTheme() {
+  const context = useContext(AppThemeContext);
+
+  if (!context) {
+    throw new Error('useAppTheme must be used inside ThemeProvider');
+  }
+
+  return context;
+}
+
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const { colorScheme, setColorScheme } = useColorScheme();
+  const {
+    colorScheme: nativeWindColorScheme,
+    setColorScheme: setNativeWindColorScheme,
+  } = useColorScheme();
+  const [colorScheme, setColorScheme] = useState<AppColorScheme>(
+    nativeWindColorScheme === 'dark' ? 'dark' : 'light'
+  );
 
   useEffect(() => {
-    setColorScheme('light');
-  }, [setColorScheme]);
+    setNativeWindColorScheme(colorScheme);
+  }, [colorScheme, setNativeWindColorScheme]);
+
+  const toggleColorScheme = useCallback(() => {
+    setColorScheme((current) => (current === 'dark' ? 'light' : 'dark'));
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({ colorScheme, toggleColorScheme }),
+    [colorScheme, toggleColorScheme]
+  );
 
   const themeVars = colorScheme === 'dark' ? darkTheme : lightTheme;
 
@@ -38,8 +72,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }, [themeVars, colorScheme]);
 
   return (
-    <View style={themeVars} className={`${colorScheme} flex-1 bg-background`}>
-      {children}
-    </View>
+    <AppThemeContext.Provider value={contextValue}>
+      <View style={themeVars} className={`${colorScheme} flex-1 bg-background`}>
+        {children}
+      </View>
+    </AppThemeContext.Provider>
   );
 }

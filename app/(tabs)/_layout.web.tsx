@@ -1,0 +1,238 @@
+import React, { useState } from "react";
+import {
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import { Tabs, usePathname, useRouter } from "expo-router";
+import {
+  Grid3X3,
+  Heart,
+  Home,
+  Search,
+  User,
+} from "lucide-react-native";
+import { cssInterop, useColorScheme } from "nativewind";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { MobileTabBar } from "@/components/MobileTabBar";
+
+cssInterop(Home, { className: { target: "style", nativeStyleToProp: { color: true } } });
+cssInterop(Grid3X3, { className: { target: "style", nativeStyleToProp: { color: true } } });
+cssInterop(Heart, { className: { target: "style", nativeStyleToProp: { color: true } } });
+cssInterop(User, { className: { target: "style", nativeStyleToProp: { color: true } } });
+
+type NavItemProps = {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+};
+
+function NavItem({ label, active, onPress }: NavItemProps) {
+  return (
+    <Pressable
+      accessibilityRole="link"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      className="relative h-16 px-3 items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    >
+      <Text
+        className={active
+          ? "text-primary font-semibold text-sm"
+          : "text-foreground/75 font-medium text-sm hover:text-primary transition-colors duration-200"}
+      >
+        {label}
+      </Text>
+      {active ? (
+        <View className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-primary" />
+      ) : null}
+    </Pressable>
+  );
+}
+
+export default function TabsWebLayout() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { width } = useWindowDimensions();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const isDesktop = width >= 900;
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const submitSearch = () => {
+    router.push({ pathname: "/Search", params: { query: searchQuery.trim() } });
+  };
+
+  const isActive = (route: string) => {
+    if (route === "/(tabs)") return pathname === "/" || pathname === "/(tabs)";
+    return pathname.toLowerCase().includes(route.split("/").pop()?.toLowerCase() ?? "");
+  };
+
+  return (
+    <View className="flex-1 bg-background">
+      {isDesktop ? (
+        <View
+          className="w-full bg-card/95 border-b border-border/80"
+          style={Platform.OS === "web"
+            ? ({
+                position: "sticky",
+                top: 0,
+                zIndex: 50,
+                boxShadow: isDark
+                  ? "0 8px 24px rgba(0,0,0,0.18)"
+                  : "0 8px 24px rgba(112,55,82,0.05)",
+                backdropFilter: "blur(14px)",
+              } as never)
+            : undefined}
+        >
+          <View className="w-full max-w-[1280px] h-[72px] px-6 self-center flex-row items-center">
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel="RoyalLagn home"
+              onPress={() => router.push("/(tabs)")}
+              className="flex-row items-center mr-8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-xl"
+            >
+              <View className="w-9 h-9 rounded-xl bg-primary items-center justify-center mr-2.5">
+                <Heart size={18} color="#FFFFFF" strokeWidth={2.4} />
+              </View>
+              <Text className="text-foreground text-xl font-bold tracking-tight">
+                Royal<Text className="text-primary">Lagn</Text>
+              </Text>
+            </Pressable>
+
+            <View className="flex-row items-center mr-6">
+              <NavItem
+                label="Home"
+                active={isActive("/(tabs)")}
+                onPress={() => router.push("/(tabs)")}
+              />
+              <NavItem
+                label="Categories"
+                active={isActive("/(tabs)/Categories")}
+                onPress={() => router.push("/(tabs)/Categories")}
+              />
+            </View>
+
+            <View className="flex-1 max-w-[430px] h-11 rounded-full bg-muted border border-border/80 flex-row items-center px-4 mr-auto focus-within:border-primary/50 transition-colors duration-200">
+              <Search size={17} className="text-muted-foreground mr-2.5" />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onSubmitEditing={submitSearch}
+                placeholder="Search vendors, categories..."
+                placeholderTextColor={isDark ? "#8D878A" : "#8B7D83"}
+                className="flex-1 text-foreground text-sm outline-none"
+                returnKeyType="search"
+                accessibilityLabel="Search vendors and categories"
+              />
+            </View>
+
+            <View className="flex-row items-center ml-5 gap-1">
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="Favorites"
+                onPress={() => router.push("/(tabs)/favorites")}
+                className="h-12 min-w-[70px] px-2 rounded-xl items-center justify-center hover:bg-muted active:opacity-80 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              >
+                <Heart
+                  size={20}
+                  className={isActive("/(tabs)/favorites") ? "text-primary" : "text-foreground/75"}
+                  fill={isActive("/(tabs)/favorites") ? "currentColor" : "none"}
+                />
+                <Text className={isActive("/(tabs)/favorites")
+                  ? "text-primary text-2xs font-semibold mt-0.5"
+                  : "text-muted-foreground text-2xs font-medium mt-0.5"}
+                >
+                  Favorites
+                </Text>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="Profile"
+                onPress={() => router.push("/(tabs)/profile")}
+                className="h-12 min-w-[68px] px-2 rounded-xl items-center justify-center hover:bg-muted active:opacity-80 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              >
+                <User size={20} className={isActive("/(tabs)/profile") ? "text-primary" : "text-foreground/75"} />
+                <Text className={isActive("/(tabs)/profile")
+                  ? "text-primary text-2xs font-semibold mt-0.5"
+                  : "text-muted-foreground text-2xs font-medium mt-0.5"}
+                >
+                  Profile
+                </Text>
+              </Pressable>
+
+              <ThemeToggle />
+            </View>
+          </View>
+        </View>
+      ) : null}
+
+      <Tabs
+        tabBar={(props) => isDesktop ? null : <MobileTabBar {...props} />}
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: isDark ? "#EC4899" : "#E91E63",
+          tabBarInactiveTintColor: isDark ? "#AAA0A5" : "#787178",
+          tabBarLabelPosition: "below-icon",
+        }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Home",
+            tabBarIcon: ({ focused }) => (
+              <Home
+                className={focused ? "text-primary" : "text-muted-foreground"}
+                size={22}
+                strokeWidth={focused ? 2.5 : 2}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="Categories"
+          options={{
+            title: "Category",
+            tabBarIcon: ({ focused }) => (
+              <Grid3X3
+                className={focused ? "text-primary" : "text-muted-foreground"}
+                size={22}
+                strokeWidth={focused ? 2.5 : 2}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="favorites"
+          options={{
+            title: "Favorites",
+            tabBarIcon: ({ focused }) => (
+              <Heart
+                className={focused ? "text-primary" : "text-muted-foreground"}
+                size={22}
+                strokeWidth={focused ? 2.5 : 2}
+                fill={focused ? "currentColor" : "none"}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: "Profile",
+            tabBarIcon: ({ focused }) => (
+              <User
+                className={focused ? "text-primary" : "text-muted-foreground"}
+                size={22}
+                strokeWidth={focused ? 2.5 : 2}
+              />
+            ),
+          }}
+        />
+      </Tabs>
+    </View>
+  );
+}
