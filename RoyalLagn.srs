@@ -815,6 +815,7 @@ Requirements are numbered FR-XXX. Priority is: **P1** (must-have, blocks launch)
 
 ---
 
+*Revision note — 21 July 2026: Documentation-only update used to verify the local Git commit and push workflow.*
 *RoyalLagn SRS v1.0 — July 2026*
 *Document covers Expo SDK 54 / React Native 0.81.5 codebase baseline.*
 *Prepared for internal development team. Confidential.*
