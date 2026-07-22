@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Href, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { LogOut, Shield, ChevronRight } from "lucide-react-native";
+import { LogOut, Shield, ChevronRight, ClipboardList } from "lucide-react-native";
 import AdminFooter from "@/components/AdminFooter";
 
 type MenuItem = {
@@ -23,6 +23,13 @@ export default function AdminDashLogout() {
   };
 
   const menuItems: MenuItem[] = [
+    {
+      id: "vendor-applications",
+      title: "Vendor Applications",
+      icon: ClipboardList,
+      color: "#E91E63",
+      route: "/VendorApplications",
+    },
     {
       id: "profile",
       title: "Admin Profile",

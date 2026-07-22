@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import {
   Menu,
   Bell,
@@ -23,9 +23,11 @@ import {
   BarChart3,
   UserPlus,
   ChevronRight,
+  ClipboardList,
 } from "lucide-react-native";
 
 import AdminFooter from "@/components/AdminFooter";
+import { supabase } from "@/services/supabase";
 
 type StatCard = {
   id: string;
@@ -102,6 +104,7 @@ const statsData: StatCard[] = [
 ];
 
 const quickActions: QuickAction[] = [
+  { id: "vendor-applications", title: "Vendor Applications", icon: ClipboardList, color: "#EC4899" },
   { id: "add-vendor", title: "Add Vendor", icon: UserPlus, color: "#E91E63" },
   {
     id: "subscriptions",
@@ -195,9 +198,15 @@ export default function AdminDashboard() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const router = useRouter();
+  const [notificationCount, setNotificationCount] = useState(0);
+  useFocusEffect(useCallback(() => {
+    supabase.from("admin_notifications").select("id", { count: "exact", head: true }).eq("is_read", false)
+      .then(({ count }) => setNotificationCount(count ?? 0));
+  }, []));
   const showPlaceholder = (title: string) =>
     Alert.alert(title, `${title} is available as a local frontend placeholder.`);
   const handleQuickAction = (id: string) => {
+    if (id === "vendor-applications") return router.push("/VendorApplications");
     if (id === "add-vendor") return router.push("/vendors-admin-listing");
     if (id === "subscriptions") return router.push("/subscriptions-admin");
     if (id === "payments") return router.push("/payments-admin");
@@ -221,9 +230,9 @@ export default function AdminDashboard() {
             <Menu size={24} className="text-foreground" />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-primary">RoyalLagn</Text>
-          <TouchableOpacity className="p-2 -mr-2 relative" onPress={() => router.push("/AdminSettings")}>
+          <TouchableOpacity className="p-2 -mr-2 relative" onPress={() => router.push("/VendorApplications")}>
             <Bell size={24} className="text-foreground" />
-            <View className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+            {notificationCount > 0 ? <View className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-destructive rounded-full items-center justify-center"><Text className="text-white text-[10px] font-bold">{notificationCount > 99 ? "99+" : notificationCount}</Text></View> : null}
           </TouchableOpacity>
         </View>
 

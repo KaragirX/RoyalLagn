@@ -1,4 +1,5 @@
 import * as ImagePicker from "expo-image-picker";
+import { Platform } from "react-native";
 
 const CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -90,14 +91,39 @@ export async function uploadImage(
   const fileName = image.fileName ?? `image-${Date.now()}.jpg`;
   const mimeType = image.mimeType ?? "image/jpeg";
 
-  formData.append(
-    "file",
-    {
-      uri: image.uri,
-      name: fileName,
-      type: mimeType,
-    } as unknown as Blob
-  );
+  if (Platform.OS === "web") {
+    let imageBlob: Blob;
+
+    try {
+      const imageResponse = await fetch(image.uri);
+
+      if (!imageResponse.ok) {
+        throw new Error(`Unable to read selected image (${imageResponse.status}).`);
+      }
+
+      imageBlob = await imageResponse.blob();
+    } catch (error) {
+      throw new CloudinaryError(
+        "Unable to prepare the selected image for upload.",
+        "UPLOAD_ERROR",
+        error
+      );
+    }
+
+    const webFile = new File([imageBlob], fileName, {
+      type: imageBlob.type || mimeType,
+    });
+    formData.append("file", webFile);
+  } else {
+    formData.append(
+      "file",
+      {
+        uri: image.uri,
+        name: fileName,
+        type: mimeType,
+      } as unknown as Blob
+    );
+  }
   formData.append("upload_preset", UPLOAD_PRESET ?? "");
 
   let response: Response;

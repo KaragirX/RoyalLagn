@@ -326,9 +326,7 @@ export default function HomeScreen() {
               </Text>
               <TouchableOpacity
                 style={s.registerBtn}
-                onPress={() => {
-                  router.push("/vendor-dashboard");
-                }}
+                onPress={() => router.push("/BecomeVendor")}
               >
                 <Text style={s.registerTxt}>Register Now</Text>
                 <ChevronRight size={13} color="#FFF" />
