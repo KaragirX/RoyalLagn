@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { FavoritesProvider } from '@/context/FavoritesContext';
+import VendorBottomNav from '@/components/vendor/VendorBottomNav';
 
 export const unstable_settings = {
   initialRouteName: "DashboardCenter",
@@ -50,7 +51,12 @@ export default function RootLayout() {
         <ThemeProvider>
           <SafeAreaProvider>
             <StatusBar style="auto" />
-            <Stack screenOptions={{ headerShown: false }} />
+            <View className="bg-background" style={styles.app}>
+              <View style={styles.stack}>
+                <Stack screenOptions={{ headerShown: false }} />
+              </View>
+              <VendorBottomNav />
+            </View>
           </SafeAreaProvider>
         </ThemeProvider>
       </FavoritesProvider>
@@ -59,6 +65,8 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
+  app: { flex: 1 },
+  stack: { flex: 1, minHeight: 0 },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',

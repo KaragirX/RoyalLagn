@@ -1,420 +1,83 @@
 import React, { useState } from "react";
-import {
-View,
-Text,
-ScrollView,
-TouchableOpacity,
-Image,
-Alert,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { useColorScheme } from "nativewind";
-import {
-ArrowLeft,
-Edit3,
-Crown,
-MapPin,
-User,
-Mail,
-Phone,
-MapPinned,
-Lock,
-Briefcase,
-Layers,
-Award,
-Users,
-Languages,
-HelpCircle,
-Headphones,
-Shield,
-FileText,
-LogOut,
-ChevronRight,
-CheckCircle2,
-} from "lucide-react-native";
-import {
-CloudinaryError,
-pickAndUploadImage,
-} from "@/services/cloudinary";
+import { BriefcaseBusiness, ChevronRight, CircleHelp, Images, MapPin, Pencil, Settings, Sparkles, Trash2, X } from "lucide-react-native";
+import VendorHeader from "@/components/vendor/VendorHeader";
+import { useAppTheme } from "@/components/ThemeProvider";
+import { vendorTheme } from "@/components/vendor/VendorTheme";
+import { useVendorWorkspace } from "@/hooks/useVendorWorkspace";
 
-export default function VendorsDashProfile() {
-const router = useRouter();
-useColorScheme();
-const [profileImageUrl, setProfileImageUrl] = useState(
-"https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&auto=format&fit=crop&q=60"
-);
-const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-const showPlaceholder = (title: string) =>
-Alert.alert(title, `${title} is available as a local frontend placeholder.`);
-const editProfilePhoto = async () => {
-if (isUploadingPhoto) return;
+export default function VendorProfile() {
+  const router = useRouter();
+  const { colorScheme } = useAppTheme();
+  const colors = vendorTheme[colorScheme];
+  const { data, completion } = useVendorWorkspace();
+  const [photoOpen, setPhotoOpen] = useState(false);
+  const vendor = data.vendor;
+  const groups = [
+    [
+      { label: "Edit business profile", detail: "Identity, description, contact and location", icon: Pencil, route: "/VendorEditProfile" },
+      { label: "Services and pricing", detail: `${data.services.length} services configured`, icon: BriefcaseBusiness, route: "/VendorServices" },
+      { label: "Portfolio", detail: `${data.albums.length} albums · ${data.media.length} media`, icon: Images, route: "/VendorGallery" },
+    ],
+    [
+      { label: "Subscription", detail: vendor?.subscription_status || "Review plan and visibility", icon: Sparkles, route: "/VendorSubscription" },
+      { label: "Vendor settings", detail: "Preferences and account controls", icon: Settings, route: "/VendorSettings" },
+      { label: "Help and support", detail: "Guides and contact options", icon: CircleHelp, route: "/VendorHelp" },
+    ],
+  ];
+  return <View style={[styles.page, { backgroundColor: colors.background }]}>
+    <VendorHeader unread={data.notifications.filter((item) => !item.is_read).length} />
+    <ScrollView contentContainerStyle={styles.content}>
+      <View style={styles.hero}>
+        <Pressable accessibilityLabel="Open profile photo options" onPress={() => setPhotoOpen(true)} style={[styles.photoRing, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+          {vendor?.logo_url ? <Image source={{ uri: vendor.logo_url }} style={styles.photo} /> : <Text style={[styles.initial, { color: colors.pink }]}>{vendor?.business_name?.[0]?.toUpperCase() || "R"}</Text>}
+          <View style={[styles.editBadge, { backgroundColor: colors.pink, borderColor: colors.background }]}><Pencil size={13} color="#FFF" /></View>
+        </Pressable>
+        <Text style={[styles.name, { color: colors.text }]}>{vendor?.business_name || "Your vendor business"}</Text>
+        <Text style={[styles.category, { color: colors.muted }]}>{vendor?.categories?.name || "Complete your vendor category"}</Text>
+        {(vendor?.city || vendor?.state) && <View style={styles.location}><MapPin size={13} color={colors.muted} /><Text style={[styles.locationText, { color: colors.muted }]}>{[vendor.city, vendor.state].filter(Boolean).join(", ")}</Text></View>}
+        <View style={[styles.completion, { backgroundColor: colors.surfaceSoft }]}>
+          <Text style={[styles.completionText, { color: colors.pink }]}>{completion.percent}% profile complete</Text>
+          <View style={[styles.track, { backgroundColor: colors.border }]}><View style={[styles.fill, { width: `${completion.percent}%`, backgroundColor: colors.pink }]} /></View>
+        </View>
+      </View>
+      {groups.map((group, groupIndex) => <View key={groupIndex} style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        {group.map(({ label, detail, icon: Icon, route }, index) => <Pressable key={label} onPress={() => router.push(route as any)}
+          style={({ pressed }) => [styles.row, index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border }, pressed && { backgroundColor: colors.surfaceSoft }]}>
+          <View style={[styles.rowIcon, { backgroundColor: colors.surfaceSoft }]}><Icon size={19} color={colors.pink} /></View>
+          <View style={styles.flex}><Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text><Text style={[styles.rowDetail, { color: colors.muted }]}>{detail}</Text></View>
+          <ChevronRight size={18} color={colors.muted} />
+        </Pressable>)}
+      </View>)}
+    </ScrollView>
+    <Modal visible={photoOpen} transparent animationType="fade" onRequestClose={() => setPhotoOpen(false)}>
+      <Pressable style={styles.overlay} onPress={() => setPhotoOpen(false)}>
+        <View style={[styles.photoSheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.sheetTop}><Text style={[styles.sheetTitle, { color: colors.text }]}>Profile photo</Text><Pressable onPress={() => setPhotoOpen(false)}><X size={21} color={colors.text} /></Pressable></View>
+          <View style={[styles.largePhoto, { backgroundColor: colors.surfaceSoft }]}>
+            {vendor?.logo_url ? <Image source={{ uri: vendor.logo_url }} style={StyleSheet.absoluteFillObject} /> : <Text style={[styles.largeInitial, { color: colors.pink }]}>{vendor?.business_name?.[0]?.toUpperCase() || "R"}</Text>}
+          </View>
+          <View style={styles.photoActions}>
+            <Pressable onPress={() => { setPhotoOpen(false); router.push("/VendorEditProfile"); }} style={[styles.photoAction, { backgroundColor: colors.surfaceSoft }]}><Pencil size={19} color={colors.pink} /><Text style={[styles.photoActionText, { color: colors.text }]}>Edit photo</Text></Pressable>
+            <Pressable onPress={() => Alert.alert("Remove profile photo?", "Open Edit Profile to confirm this change.")} style={[styles.photoAction, { backgroundColor: colors.surfaceSoft }]}><Trash2 size={19} color={colors.warning} /><Text style={[styles.photoActionText, { color: colors.text }]}>Delete photo</Text></Pressable>
+          </View>
+        </View>
+      </Pressable>
+    </Modal>
+  </View>;
+}
 
-setIsUploadingPhoto(true);
-try {
-const uploadedUrl = await pickAndUploadImage({
-allowsEditing: true,
-aspect: [1, 1],
+const styles = StyleSheet.create({
+  page: { flex: 1 }, content: { padding: 16, paddingTop: 24, paddingBottom: 24, width: "100%", maxWidth: 760, alignSelf: "center" },
+  hero: { alignItems: "center", paddingBottom: 23 }, photoRing: { width: 116, height: 116, borderRadius: 58, borderWidth: 4, alignItems: "center", justifyContent: "center", marginBottom: 15 },
+  photo: { width: 104, height: 104, borderRadius: 52 }, initial: { fontSize: 42, fontWeight: "800" }, editBadge: { position: "absolute", right: 0, bottom: 4, width: 32, height: 32, borderRadius: 16, borderWidth: 3, alignItems: "center", justifyContent: "center" },
+  name: { fontSize: 22, lineHeight: 28, fontWeight: "800", textAlign: "center", letterSpacing: -0.45 }, category: { fontSize: 12, marginTop: 4 }, location: { flexDirection: "row", gap: 4, alignItems: "center", marginTop: 8 }, locationText: { fontSize: 11 },
+  completion: { borderRadius: 15, width: "100%", maxWidth: 420, padding: 12, marginTop: 16 }, completionText: { fontSize: 11, fontWeight: "800", textAlign: "center" }, track: { height: 5, borderRadius: 4, marginTop: 8, overflow: "hidden" }, fill: { height: "100%", borderRadius: 4 },
+  group: { borderRadius: 22, borderWidth: 1, overflow: "hidden", marginBottom: 13 }, row: { minHeight: 75, flexDirection: "row", alignItems: "center", padding: 13, gap: 11 },
+  rowIcon: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }, flex: { flex: 1, minWidth: 0 }, rowLabel: { fontSize: 13, fontWeight: "750" as any }, rowDetail: { fontSize: 10, marginTop: 4 },
+  overlay: { flex: 1, backgroundColor: "rgba(20,10,15,.48)", justifyContent: "flex-end" }, photoSheet: { borderWidth: 1, borderRadius: 28, padding: 20, paddingBottom: 34, width: "100%", maxWidth: 520, alignSelf: "center" },
+  sheetTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, sheetTitle: { fontSize: 18, fontWeight: "800" },
+  largePhoto: { width: 190, height: 190, borderRadius: 95, overflow: "hidden", alignSelf: "center", marginVertical: 24, alignItems: "center", justifyContent: "center" }, largeInitial: { fontSize: 70, fontWeight: "800" },
+  photoActions: { flexDirection: "row", gap: 10 }, photoAction: { flex: 1, height: 52, borderRadius: 16, alignItems: "center", justifyContent: "center", gap: 4 }, photoActionText: { fontSize: 10, fontWeight: "700" },
 });
-
-if (uploadedUrl) {
-setProfileImageUrl(uploadedUrl);
-}
-} catch (error) {
-Alert.alert(
-"Photo upload failed",
-error instanceof CloudinaryError
-? error.message
-: "Unable to upload the selected photo. Please try again."
-);
-} finally {
-setIsUploadingPhoto(false);
-}
-};
-
-const accountInfo = [
-{
-id: "name",
-icon: User,
-label: "Full Name",
-value: "Rohit Sharma",
-},
-{
-id: "email",
-icon: Mail,
-label: "Email Address",
-value: "rohit.magicmoments@gmail.com",
-},
-{
-id: "phone",
-icon: Phone,
-label: "Mobile Number",
-value: "+91 98765 43210",
-},
-{
-id: "address",
-icon: MapPinned,
-label: "Business Address",
-value: "Lonavala, Pune, Maharashtra, 410401",
-},
-{
-id: "password",
-icon: Lock,
-label: "Password",
-value: "••••••••",
-},
-];
-
-const businessInfo = [
-{
-id: "businessName",
-icon: Briefcase,
-label: "Business Name",
-value: "Magic Moments Photography",
-},
-{
-id: "category",
-icon: Layers,
-label: "Business Category",
-value: "Photographer",
-},
-{
-id: "experience",
-icon: Award,
-label: "Years of Experience",
-value: "8+ Years",
-},
-{
-id: "team",
-icon: Users,
-label: "Team Size",
-value: "5-10 Members",
-},
-{
-id: "languages",
-icon: Languages,
-label: "Languages Known",
-value: "English, Hindi, Marathi",
-},
-];
-
-const supportSettings = [
-{
-id: "help",
-icon: HelpCircle,
-label: "Help Center",
-},
-{
-id: "support",
-icon: Headphones,
-label: "Contact Support",
-},
-{
-id: "privacy",
-icon: Shield,
-label: "Privacy Policy",
-},
-{
-id: "terms",
-icon: FileText,
-label: "Terms & Conditions",
-},
-{
-id: "logout",
-icon: LogOut,
-label: "Logout",
-isLogout: true,
-},
-];
-
-return (
-<SafeAreaView
-className="flex-1 bg-background"
-edges={["top", "left", "right"]}
->
-{/* Header */}
-<View className="flex-row items-center justify-between px-4 py-3">
-<TouchableOpacity
-className="w-10 h-10 items-center justify-center rounded-full bg-muted"
-onPress={() => router.back()}
->
-<ArrowLeft size={20} className="text-foreground" />
-</TouchableOpacity>
-
-<Text className="text-xl font-bold text-foreground">Profile</Text>
-
-<TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full bg-muted" onPress={() => router.push("/VendorEditProfile")}>
-<Edit3 size={20} className="text-foreground" />
-</TouchableOpacity>
-</View>
-
-<ScrollView
-contentContainerStyle={{ paddingBottom: 140 }}
-showsVerticalScrollIndicator={false}
->
-{/* Profile Header Section */}
-<View className="items-center px-4 pt-2 pb-6">
-{/* Avatar */}
-<TouchableOpacity
-className="relative"
-activeOpacity={0.8}
-disabled={isUploadingPhoto}
-onPress={editProfilePhoto}
->
-<Image
-source={{ uri: profileImageUrl }}
-className="w-24 h-24 rounded-full border-4 border-primary/20"
-resizeMode="cover"
-/>
-<View className="absolute bottom-0 right-0 w-7 h-7 bg-primary rounded-full items-center justify-center border-2 border-background">
-<CheckCircle2 size={14} color="#FFFFFF" />
-</View>
-</TouchableOpacity>
-
-{/* Business Name */}
-<View className="flex-row items-center mt-3">
-<Text className="text-xl font-bold text-foreground text-center">
-Magic Moments Photography
-</Text>
-<View className="ml-2 bg-green-100 px-2 py-0.5 rounded-full flex-row items-center">
-<Text className="text-green-600 text-xs font-medium">
-Verified
-</Text>
-</View>
-</View>
-
-{/* Category */}
-<Text className="text-primary font-medium text-sm mt-1">
-Photographer
-</Text>
-
-{/* Location */}
-<View className="flex-row items-center mt-1">
-<MapPin size={14} className="text-muted-foreground" />
-<Text className="text-muted-foreground text-sm ml-1">
-Lonavala, Pune
-</Text>
-</View>
-</View>
-
-{/* Subscription Plan Card */}
-<View className="mx-4 mb-6">
-<View className="bg-card rounded-2xl p-4 border border-border flex-row items-center justify-between">
-<View className="flex-row items-center flex-1">
-<View className="w-12 h-12 rounded-full bg-primary/10 items-center justify-center">
-<Crown size={24} color="#E91E63" />
-</View>
-<View className="ml-3 flex-1">
-<Text className="text-muted-foreground text-xs">
-Subscription Plan
-</Text>
-<Text className="text-foreground font-bold text-base">
-Premium Plan
-</Text>
-<Text className="text-muted-foreground text-xs">
-Valid till 15 Jun 2025
-</Text>
-</View>
-</View>
-<TouchableOpacity className="bg-primary px-4 py-2 rounded-full" onPress={() => router.push("/VendorSubscription")}>
-<Text className="text-white text-xs font-medium">View Plan</Text>
-</TouchableOpacity>
-</View>
-</View>
-
-{/* Account Information */}
-<View className="mx-4 mb-6">
-<Text className="text-foreground font-bold text-base mb-3">
-Account Information
-</Text>
-<View className="bg-card rounded-2xl border border-border overflow-hidden">
-{accountInfo.map((item, index) => {
-const Icon = item.icon;
-return (
-<TouchableOpacity
-key={item.id}
-className={`flex-row items-center p-4 ${
-index !== accountInfo.length - 1 ? "border-b border-border" : ""
-}`}
-onPress={() => router.push("/VendorEditProfile")}
->
-<View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
-<Icon size={18} color="#E91E63" />
-</View>
-<View className="flex-1 ml-3">
-<Text className="text-muted-foreground text-xs">
-{item.label}
-</Text>
-<Text className="text-foreground text-sm font-medium">
-{item.value}
-</Text>
-</View>
-<ChevronRight size={18} className="text-muted-foreground" />
-</TouchableOpacity>
-);
-})}
-</View>
-</View>
-
-{/* Business Information */}
-<View className="mx-4 mb-6">
-<Text className="text-foreground font-bold text-base mb-3">
-Business Information
-</Text>
-<View className="bg-card rounded-2xl border border-border overflow-hidden">
-{businessInfo.map((item, index) => {
-const Icon = item.icon;
-return (
-<TouchableOpacity
-key={item.id}
-className={`flex-row items-center p-4 ${
-index !== businessInfo.length - 1 ? "border-b border-border" : ""
-}`}
-onPress={() => router.push("/VendorEditProfile")}
->
-<View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
-<Icon size={18} color="#E91E63" />
-</View>
-<View className="flex-1 ml-3">
-<Text className="text-muted-foreground text-xs">
-{item.label}
-</Text>
-<Text className="text-foreground text-sm font-medium">
-{item.value}
-</Text>
-</View>
-<ChevronRight size={18} className="text-muted-foreground" />
-</TouchableOpacity>
-);
-})}
-</View>
-</View>
-
-{/* Support & Settings */}
-<View className="mx-4 mb-6">
-<Text className="text-foreground font-bold text-base mb-3">
-Support & Settings
-</Text>
-<View className="bg-card rounded-2xl border border-border overflow-hidden">
-{supportSettings.map((item, index) => {
-const Icon = item.icon;
-return (
-<TouchableOpacity
-key={item.id}
-className={`flex-row items-center p-4 ${
-index !== supportSettings.length - 1 ? "border-b border-border" : ""
-}`}
-onPress={() => {
-if (item.id === "logout") {
-router.replace("/DashboardCenter");
-} else if (item.id === "support") {
-router.push("/VendorHelp");
-} else if (item.id === "help") {
-router.push("/VendorHelp");
-} else if (item.id === "privacy") {
-router.push("/PrivacyPolicy");
-} else if (item.id === "terms") {
-router.push("/Terms");
-} else {
-showPlaceholder(item.label);
-}
-}}
->
-<View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
-<Icon size={18} color={item.isLogout ? "#E91E63" : "#E91E63"} />
-</View>
-<View className="flex-1 ml-3">
-<Text
-className={`text-sm font-medium ${
-item.isLogout ? "text-primary" : "text-foreground"
-}`}
->
-{item.label}
-</Text>
-</View>
-<ChevronRight size={18} className="text-muted-foreground" />
-</TouchableOpacity>
-);
-})}
-</View>
-</View>
-</ScrollView>
-
-{/* Bottom Tab Bar */}
-<View
-className="absolute bottom-0 left-0 right-0 bg-card border-t border-border flex-row justify-around py-3 pb-6"
-style={{
-shadowColor: "#000",
-shadowOffset: { width: 0, height: -2 },
-shadowOpacity: 0.05,
-shadowRadius: 8,
-elevation: 10,
-}}
->
-<TouchableOpacity
-className="items-center"
-onPress={() => router.push("/vendor-dashboard")}
->
-<View className="w-6 h-6 items-center justify-center">
-<View className="w-5 h-5 border-2 border-muted-foreground rounded-md" />
-</View>
-<Text className="text-xs mt-1 text-muted-foreground">Dashboard</Text>
-</TouchableOpacity>
-
-<TouchableOpacity className="items-center" onPress={() => showPlaceholder("Vendor Enquiries")}>
-<View className="w-6 h-6 items-center justify-center">
-<View className="w-5 h-5 border-2 border-muted-foreground rounded-full" />
-</View>
-<Text className="text-xs mt-1 text-muted-foreground">Enquiries</Text>
-</TouchableOpacity>
-
-<TouchableOpacity className="items-center" onPress={() => showPlaceholder("Vendor Profile")}>
-<View className="w-6 h-6 items-center justify-center">
-<User size={22} color="#E91E63" />
-</View>
-<Text className="text-xs mt-1 text-primary font-medium">Profile</Text>
-</TouchableOpacity>
-</View>
-</SafeAreaView>
-);
-}

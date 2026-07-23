@@ -25,6 +25,27 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Vendor workspace backend
+
+The vendor dashboard reads live Supabase data. Apply the included migrations before testing signed-in vendor data:
+
+```bash
+npx supabase db push
+```
+
+Portfolio uploads are signed by Supabase Edge Functions. Store these as function secrets—never as `EXPO_PUBLIC_` variables:
+
+```bash
+npx supabase secrets set \
+  CLOUDINARY_CLOUD_NAME=your-cloud-name \
+  CLOUDINARY_API_KEY=your-api-key \
+  CLOUDINARY_API_SECRET=your-api-secret
+npx supabase functions deploy cloudinary-sign
+npx supabase functions deploy cloudinary-delete
+```
+
+Uploaded portfolio assets use `royallagn/vendors/{vendorId}/albums/{albumId}/`. The app stores the secure URL, Cloudinary public ID, media type, display order, and album relationship in Supabase.
+
 ## Get a fresh project
 
 When you're ready, run:

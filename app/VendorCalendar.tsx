@@ -1,0 +1,78 @@
+import React, { useMemo, useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ChevronLeft, ChevronRight, CircleCheck, Clock3, LockKeyhole } from "lucide-react-native";
+import VendorHeader from "@/components/vendor/VendorHeader";
+import { useAppTheme } from "@/components/ThemeProvider";
+import { vendorTheme } from "@/components/vendor/VendorTheme";
+import { useVendorWorkspace } from "@/hooks/useVendorWorkspace";
+import { supabase } from "@/services/supabase";
+
+const statuses = [
+  { id: "available", label: "Available", icon: CircleCheck },
+  { id: "tentative", label: "Tentative", icon: Clock3 },
+  { id: "blocked", label: "Blocked", icon: LockKeyhole },
+] as const;
+const iso = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+export default function VendorCalendar() {
+  const { colorScheme } = useAppTheme();
+  const colors = vendorTheme[colorScheme];
+  const { data, refresh } = useVendorWorkspace();
+  const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [selected, setSelected] = useState(() => iso(new Date()));
+  const days = useMemo(() => {
+    const result: (Date | null)[] = Array(month.getDay()).fill(null);
+    const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    for (let day = 1; day <= count; day++) result.push(new Date(month.getFullYear(), month.getMonth(), day));
+    while (result.length % 7) result.push(null);
+    return result;
+  }, [month]);
+  const dateStatus = (date: string) => data.availability.find((item) => item.available_date === date)?.status;
+  const update = async (status: string) => {
+    if (!data.vendor?.id) return Alert.alert("Vendor profile required", "Connect a vendor profile before changing availability.");
+    const { error } = await supabase.from("vendor_availability").upsert({ vendor_id: data.vendor.id, available_date: selected, status }, { onConflict: "vendor_id,available_date" });
+    if (error) Alert.alert("Availability not saved", error.message); else refresh();
+  };
+  return <View style={[styles.page, { backgroundColor: colors.background }]}>
+    <VendorHeader unread={data.notifications.filter((item) => !item.is_read).length} />
+    <ScrollView contentContainerStyle={styles.content}>
+      <Text style={[styles.eyebrow, { color: colors.pink }]}>PLAN WITH CLARITY</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Availability</Text>
+      <Text style={[styles.subtitle, { color: colors.muted }]}>Keep customer expectations accurate with an up-to-date working calendar.</Text>
+      <View style={[styles.calendar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={styles.monthRow}><Pressable onPress={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} style={styles.arrow}><ChevronLeft size={20} color={colors.text} /></Pressable><Text style={[styles.month, { color: colors.text }]}>{month.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</Text><Pressable onPress={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} style={styles.arrow}><ChevronRight size={20} color={colors.text} /></Pressable></View>
+        <View style={styles.grid}>{["S", "M", "T", "W", "T", "F", "S"].map((day, index) => <Text key={`${day}${index}`} style={[styles.weekday, { color: colors.muted }]}>{day}</Text>)}
+          {days.map((date, index) => {
+            if (!date) return <View key={`blank${index}`} style={styles.day} />;
+            const value = iso(date); const status = dateStatus(value); const active = value === selected;
+            return <Pressable key={value} onPress={() => setSelected(value)} style={[styles.day, active && { backgroundColor: colors.pink }, !active && status === "available" && { backgroundColor: colors.surfaceSoft }]}>
+              <Text style={{ color: active ? "#FFF" : colors.text, fontSize: 12, fontWeight: active ? "800" : "600" }}>{date.getDate()}</Text>
+              {status && !active && <View style={[styles.dot, { backgroundColor: status === "available" ? colors.success : status === "blocked" ? colors.warning : colors.pink }]} />}
+            </Pressable>;
+          })}
+        </View>
+      </View>
+      <View style={[styles.editor, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Text style={[styles.editorTitle, { color: colors.text }]}>{new Date(`${selected}T12:00:00`).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>Choose how this date appears in your vendor schedule.</Text>
+        <View style={styles.statusGrid}>{statuses.map(({ id, label, icon: Icon }) => {
+          const active = dateStatus(selected) === id;
+          return <Pressable key={id} onPress={() => update(id)} style={[styles.status, { borderColor: active ? colors.pink : colors.border, backgroundColor: active ? colors.surfaceSoft : colors.background }]}>
+            <Icon size={19} color={active ? colors.pink : colors.muted} /><Text style={{ color: active ? colors.pink : colors.text, fontSize: 11, fontWeight: "700" }}>{label}</Text>
+          </Pressable>;
+        })}</View>
+      </View>
+    </ScrollView>
+  </View>;
+}
+
+const styles = StyleSheet.create({
+  page: { flex: 1 }, content: { padding: 16, paddingTop: 22, paddingBottom: 24, width: "100%", maxWidth: 780, alignSelf: "center" },
+  eyebrow: { fontSize: 10, letterSpacing: 1.5, fontWeight: "800", marginBottom: 5 }, title: { fontSize: 29, fontWeight: "800", letterSpacing: -0.8 },
+  subtitle: { fontSize: 12, lineHeight: 18, marginTop: 4 }, calendar: { borderWidth: 1, borderRadius: 24, padding: 15, marginTop: 20 },
+  monthRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }, month: { fontSize: 16, fontWeight: "800" }, arrow: { width: 38, height: 38, alignItems: "center", justifyContent: "center" },
+  grid: { flexDirection: "row", flexWrap: "wrap" }, weekday: { width: "14.285%", textAlign: "center", fontSize: 10, fontWeight: "800", paddingVertical: 8 },
+  day: { width: "14.285%", aspectRatio: 1, borderRadius: 13, alignItems: "center", justifyContent: "center" }, dot: { position: "absolute", bottom: 5, width: 4, height: 4, borderRadius: 2 },
+  editor: { borderWidth: 1, borderRadius: 22, padding: 16, marginTop: 12 }, editorTitle: { fontSize: 16, fontWeight: "800" },
+  statusGrid: { flexDirection: "row", gap: 8, marginTop: 16 }, status: { flex: 1, minHeight: 68, borderWidth: 1, borderRadius: 16, alignItems: "center", justifyContent: "center", gap: 7 },
+});

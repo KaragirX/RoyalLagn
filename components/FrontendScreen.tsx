@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import {
   ArrowLeft,
   Bell,
@@ -31,6 +31,7 @@ import {
 } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import VendorHeader from "@/components/vendor/VendorHeader";
 
 export type FrontendScreenMode =
   | "form"
@@ -73,6 +74,11 @@ export default function FrontendScreen({
   onItemPress,
 }: FrontendScreenProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isVendorWorkspace = [
+    "/vendoreditprofile", "/vendorservices", "/vendornotifications",
+    "/vendorsettings", "/vendorhelp", "/vendorsubscription",
+  ].some((route) => pathname.toLowerCase().startsWith(route));
   const { width } = useWindowDimensions();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -116,8 +122,8 @@ export default function FrontendScreen({
           : Info;
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
-      <View className="w-full bg-card/95 border-b border-border/80">
+    <SafeAreaView className="flex-1 bg-background" edges={isVendorWorkspace ? ["left", "right"] : ["top", "left", "right"]}>
+      {isVendorWorkspace ? <VendorHeader /> : <View className="w-full bg-card/95 border-b border-border/80">
         <View
           style={[styles.topBar, { paddingHorizontal: pagePadding, maxWidth: 1184 }]}
         >
@@ -136,14 +142,17 @@ export default function FrontendScreen({
           </View>
           <ThemeToggle />
         </View>
-      </View>
+      </View>}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingHorizontal: pagePadding },
+          {
+            paddingHorizontal: pagePadding,
+            paddingBottom: 40,
+          },
         ]}
       >
         <View style={[styles.content, { maxWidth: contentMaxWidth }]}>

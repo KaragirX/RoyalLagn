@@ -14,6 +14,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
     "Supabase is not configured. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in .env."
   );
 }
+if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(supabaseUrl)) {
+  throw new Error(
+    "EXPO_PUBLIC_SUPABASE_URL must be the Supabase project base URL, for example https://project-ref.supabase.co, without /rest/v1/."
+  );
+}
 
 const secureStoreAdapter: SupportedStorage = {
   getItem: (key) => SecureStore.getItemAsync(key),

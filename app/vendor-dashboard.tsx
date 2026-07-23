@@ -1,414 +1,205 @@
-import React, { useState } from "react";
+import React, { useCallback } from "react";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
 import {
-View,
-Text,
-ScrollView,
-TouchableOpacity,
-Image,
-Alert,
-Share,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { useColorScheme } from "nativewind";
-import { Menu, Bell, Eye, Heart, MessageCircle, Star, ChevronRight, Edit3, HeartHandshake, Package, Tag, MessageSquare, Calendar, Settings, Share2, Megaphone, ExternalLink, Headphones, Grid3X3, MessageSquareText, User, ImageIcon } from "lucide-react-native";
+  ArrowRight, CalendarDays, Check, ChevronRight, CircleAlert, Clock3, Eye,
+  Images, MessageSquareText, Plus, Sparkles, Star, UserRoundPen,
+} from "lucide-react-native";
+import VendorHeader from "@/components/vendor/VendorHeader";
+import { vendorTheme } from "@/components/vendor/VendorTheme";
+import { useAppTheme } from "@/components/ThemeProvider";
+import { useVendorWorkspace } from "@/hooks/useVendorWorkspace";
+import VendorDashboardReveal from "@/components/vendor/VendorDashboardReveal";
 
-type ProfileItem = {
-id: string;
-title: string;
-subtitle: string;
-icon: React.ElementType;
-color: string;
-progress: number;
+const completionMeta = {
+  complete: { label: "Complete", icon: Check },
+  partial: { label: "In progress", icon: Clock3 },
+  missing: { label: "Add details", icon: Plus },
+  attention: { label: "Needs attention", icon: CircleAlert },
 };
-
-const profileItems: ProfileItem[] = [
-{
-id: "business",
-title: "Business Information",
-subtitle: "Update your business details",
-icon: Edit3,
-color: "#E91E63",
-progress: 80,
-},
-{
-id: "about",
-title: "About Your Business",
-subtitle: "Tell customers about your journey",
-icon: HeartHandshake,
-color: "#8B5CF6",
-progress: 90,
-},
-{
-id: "services",
-title: "Services & Packages",
-subtitle: "Add and manage your services",
-icon: Package,
-color: "#10B981",
-progress: 70,
-},
-{
-id: "portfolio",
-title: "Portfolio",
-subtitle: "Upload your work photos & videos",
-icon: ImageIcon,
-color: "#3B82F6",
-progress: 90,
-},
-{
-id: "pricing",
-title: "Pricing & Packages",
-subtitle: "Set your pricing and packages",
-icon: Tag,
-color: "#F59E0B",
-progress: 75,
-},
-{
-id: "reviews",
-title: "Reviews",
-subtitle: "Manage your customer reviews",
-icon: MessageSquare,
-color: "#EC4899",
-progress: 80,
-},
-{
-id: "availability",
-title: "Availability",
-subtitle: "Manage your availability calendar",
-icon: Calendar,
-color: "#6366F1",
-progress: 60,
-},
-{
-id: "seo",
-title: "SEO & Preferences",
-subtitle: "Set your preferences and keywords",
-icon: Settings,
-color: "#14B8A6",
-progress: 65,
-},
-];
-
-type QuickAction = {
-id: string;
-title: string;
-icon: React.ElementType;
-color: string;
-};
-
-const quickActions: QuickAction[] = [
-{ id: "view", title: "View Profile", icon: Eye, color: "#E91E63" },
-{ id: "share", title: "Share Profile", icon: Share2, color: "#8B5CF6" },
-{ id: "promote", title: "Promote", icon: Megaphone, color: "#F59E0B" },
-{ id: "preview", title: "Preview", icon: ExternalLink, color: "#10B981" },
-];
-
-type TabItem = {
-id: string;
-title: string;
-icon: React.ElementType;
-active?: boolean;
-href?: string;
-};
-
-const tabs: TabItem[] = [
-{ id: "dashboard", title: "Dashboard", icon: Grid3X3, active: true },
-{ id: "enquiries", title: "Enquiries", icon: MessageSquareText },
-{ id: "profile", title: "Profile", icon: User, href: "/Vendors_dash_profile" },
-];
-
-const stats = [
-{
-id: "views",
-label: "Profile Views",
-value: "1,245",
-icon: Eye,
-color: "#E91E63",
-},
-{
-id: "enquiries",
-label: "Enquiries",
-value: "320",
-icon: Heart,
-color: "#E91E63",
-},
-{
-id: "messages",
-label: "Messages",
-value: "85",
-icon: MessageCircle,
-color: "#E91E63",
-},
-{ id: "rating", label: "Rating", value: "4.8", icon: Star, color: "#E91E63" },
-];
 
 export default function VendorDashboard() {
-const router = useRouter();
-const { colorScheme } = useColorScheme();
-const isDark = colorScheme === "dark";
-const [activeTab, setActiveTab] = useState("dashboard");
-const showPlaceholder = (title: string) =>
-Alert.alert(title, `${title} is available as a local frontend placeholder.`);
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const { colorScheme } = useAppTheme();
+  const colors = vendorTheme[colorScheme];
+  const { data, loading, error, completion, refresh } = useVendorWorkspace();
+  const desktop = width >= 900;
+  const unread = data.notifications.filter((item) => !item.is_read).length;
+  const openEnquiries = data.enquiries.filter((item) => !["closed", "booked"].includes(item.status)).length;
+  const averageRating = data.reviews.length
+    ? (data.reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / data.reviews.length).toFixed(1)
+    : "—";
+  const vendorName = data.vendor?.business_name || "Your vendor business";
+  const plan = data.subscription?.plan_name || data.vendor?.subscription_status || "Free";
 
-const handleTabPress = (tabId: string) => {
-setActiveTab(tabId);
-if (tabId === "profile") {
-router.push("/Vendors_dash_profile");
+  useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
+  const stats = [
+    { label: "Profile views", value: String(data.vendor?.profile_views ?? 0), icon: Eye },
+    { label: "Open enquiries", value: String(openEnquiries), icon: MessageSquareText },
+    { label: "Portfolio media", value: String(data.media.length), icon: Images },
+    { label: "Average rating", value: averageRating, icon: Star },
+  ];
+  const quickActions = [
+    { label: "Edit profile", icon: UserRoundPen, route: "/VendorEditProfile" },
+    { label: "Add portfolio", icon: Images, route: "/VendorGallery" },
+    { label: "Update calendar", icon: CalendarDays, route: "/VendorCalendar" },
+    { label: "View enquiries", icon: MessageSquareText, route: "/VendorEnquiries" },
+  ];
+
+  return (
+    <View style={[styles.page, { backgroundColor: colors.background }]}>
+      <VendorHeader unread={unread} />
+      <ScrollView showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scroll, desktop && styles.desktopScroll]}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.pink} />}>
+        <VendorDashboardReveal>
+          <View style={styles.eyebrowRow}>
+            <View>
+              <Text style={[styles.eyebrow, { color: colors.pink }]}>VENDOR WORKSPACE</Text>
+              <Text style={[styles.greeting, { color: colors.text }]}>Good to see you.</Text>
+              <Text style={[styles.businessName, { color: colors.muted }]} numberOfLines={2}>{vendorName}</Text>
+            </View>
+            {data.vendor?.is_verified && <View style={[styles.verified, { backgroundColor: colors.surfaceSoft }]}><Check size={13} color={colors.success} /><Text style={{ color: colors.success, fontSize: 11, fontWeight: "700" }}>Verified</Text></View>}
+          </View>
+
+          {error && <View style={[styles.notice, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <CircleAlert size={18} color={colors.warning} /><View style={styles.flex}><Text style={[styles.noticeTitle, { color: colors.text }]}>Workspace unavailable</Text><Text style={[styles.noticeText, { color: colors.muted }]}>{error}</Text></View>
+            <Pressable onPress={refresh}><Text style={{ color: colors.pink, fontWeight: "700" }}>Retry</Text></Pressable>
+          </View>}
+          {!loading && !data.vendor && !error && <View style={[styles.notice, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Sparkles size={18} color={colors.pink} /><View style={styles.flex}><Text style={[styles.noticeTitle, { color: colors.text }]}>Vendor preview</Text><Text style={[styles.noticeText, { color: colors.muted }]}>Create or connect a vendor profile to populate this workspace with live information.</Text></View>
+          </View>}
+
+          <Pressable onPress={() => router.push("/VendorSubscription")}
+            style={({ pressed }) => [styles.subscription, { backgroundColor: colors.surfaceSoft, borderColor: colors.border }, pressed && styles.pressed]}>
+            <View style={[styles.planIcon, { backgroundColor: colors.pink }]}><Sparkles size={20} color="#FFF" /></View>
+            <View style={styles.flex}><Text style={[styles.smallLabel, { color: colors.muted }]}>CURRENT PLAN</Text><Text style={[styles.planName, { color: colors.text }]}>{plan} plan</Text></View>
+            <View style={styles.manage}><Text style={{ color: colors.pink, fontWeight: "700", fontSize: 12 }}>Manage</Text><ArrowRight size={15} color={colors.pink} /></View>
+          </Pressable>
+
+          <View style={[styles.statsGrid, desktop && styles.statsDesktop]}>
+            {stats.map(({ label, value, icon: Icon }, index) => (
+              <VendorDashboardReveal key={label} delay={60 + index * 35}
+                style={[styles.statCard, desktop && styles.statDesktop, { backgroundColor: colors.surface, borderColor: colors.border, shadowColor: colors.shadow }]}>
+                <View style={[styles.statIcon, { backgroundColor: colors.surfaceSoft }]}><Icon size={18} color={colors.pink} /></View>
+                <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
+                <Text style={[styles.statLabel, { color: colors.muted }]}>{label}</Text>
+              </VendorDashboardReveal>
+            ))}
+          </View>
+
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, shadowColor: colors.shadow }]}>
+            <View style={styles.sectionHeading}>
+              <View style={styles.flex}><Text style={[styles.sectionTitle, { color: colors.text }]}>Profile completion</Text><Text style={[styles.sectionSubtitle, { color: colors.muted }]}>Improve how customers discover and trust your business.</Text></View>
+              <Text style={[styles.percent, { color: colors.pink }]}>{completion.percent}%</Text>
+            </View>
+            <View style={[styles.progressTrack, { backgroundColor: colors.surfaceSoft }]}><View style={[styles.progressFill, { width: `${completion.percent}%`, backgroundColor: colors.pink }]} /></View>
+            <View style={{ marginTop: 12 }}>
+              {completion.items.map((item, index) => {
+                const meta = completionMeta[item.state];
+                const Icon = meta.icon;
+                const tint = item.state === "complete" ? colors.success : item.state === "attention" ? colors.warning : colors.pink;
+                return <Pressable key={item.id} onPress={() => router.push(item.route as any)}
+                  style={({ pressed }) => [styles.completionRow, index > 0 && { borderTopColor: colors.border, borderTopWidth: StyleSheet.hairlineWidth }, pressed && { backgroundColor: colors.surfaceSoft }]}>
+                  <View style={[styles.stateIcon, { backgroundColor: `${tint}16` }]}><Icon size={16} color={tint} /></View>
+                  <Text style={[styles.completionLabel, { color: colors.text }]}>{item.label}</Text>
+                  <Text style={[styles.stateLabel, { color: tint }]}>{meta.label}</Text>
+                  <ChevronRight size={16} color={colors.muted} />
+                </Pressable>;
+              })}
+            </View>
+          </View>
+
+          <View style={styles.sectionHeader}><Text style={[styles.sectionTitle, { color: colors.text }]}>Quick actions</Text></View>
+          <View style={styles.actionGrid}>
+            {quickActions.map(({ label, icon: Icon, route }) => <Pressable key={label} onPress={() => router.push(route as any)}
+              style={({ pressed }) => [styles.action, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
+              <View style={[styles.actionIcon, { backgroundColor: colors.surfaceSoft }]}><Icon size={21} color={colors.pink} /></View>
+              <Text style={[styles.actionText, { color: colors.text }]}>{label}</Text><ChevronRight size={16} color={colors.muted} />
+            </Pressable>)}
+          </View>
+
+          <View style={[styles.dualGrid, desktop && styles.dualDesktop]}>
+            <Pressable onPress={() => router.push("/VendorGallery")} style={[styles.summaryCard, desktop && styles.summaryDesktop, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.sectionHeading}><View><Text style={[styles.sectionTitle, { color: colors.text }]}>Portfolio</Text><Text style={[styles.sectionSubtitle, { color: colors.muted }]}>{data.albums.length} albums · {data.media.length} media</Text></View><Images size={21} color={colors.pink} /></View>
+              <Text style={[styles.summaryHint, { color: colors.muted }]}>{data.media.length ? "Keep your best recent work at the front." : "Create your first album and show customers your work."}</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push("/VendorCalendar")} style={[styles.summaryCard, desktop && styles.summaryDesktop, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.sectionHeading}><View><Text style={[styles.sectionTitle, { color: colors.text }]}>Availability</Text><Text style={[styles.sectionSubtitle, { color: colors.muted }]}>{data.availability.length} upcoming dates set</Text></View><CalendarDays size={21} color={colors.pink} /></View>
+              <Text style={[styles.summaryHint, { color: colors.muted }]}>{data.availability[0]?.available_date ? `Next update: ${data.availability[0].available_date}` : "Set dates so customers know when you are available."}</Text>
+            </Pressable>
+          </View>
+
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sectionHeading}><View><Text style={[styles.sectionTitle, { color: colors.text }]}>Recent enquiries</Text><Text style={[styles.sectionSubtitle, { color: colors.muted }]}>Latest customer interest</Text></View><Pressable onPress={() => router.push("/VendorEnquiries")}><Text style={{ color: colors.pink, fontWeight: "700", fontSize: 12 }}>View all</Text></Pressable></View>
+            {data.enquiries.slice(0, 3).map((item, index) => <View key={item.id} style={[styles.enquiry, index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border }]}>
+              <View style={[styles.avatar, { backgroundColor: colors.surfaceSoft }]}><Text style={{ color: colors.pink, fontWeight: "800" }}>{item.customer_name?.[0]?.toUpperCase() || "C"}</Text></View>
+              <View style={styles.flex}><Text style={[styles.enquiryName, { color: colors.text }]}>{item.customer_name}</Text><Text numberOfLines={1} style={[styles.enquiryMessage, { color: colors.muted }]}>{item.message}</Text></View>
+              <Text style={[styles.status, { color: colors.pink, backgroundColor: colors.surfaceSoft }]}>{item.status}</Text>
+            </View>)}
+            {!data.enquiries.length && <View style={styles.empty}><MessageSquareText size={25} color={colors.muted} /><Text style={[styles.emptyText, { color: colors.muted }]}>New customer enquiries will appear here.</Text></View>}
+          </View>
+        </VendorDashboardReveal>
+      </ScrollView>
+      {loading && !data.vendor && <View style={styles.loading}><ActivityIndicator color={colors.pink} /></View>}
+    </View>
+  );
 }
-};
-const handleQuickAction = (actionId: string) => {
-if (actionId === "view" || actionId === "preview") {
-router.push({ pathname: "/VendorsProfile", params: { vendorId: "p1", category: "Photographers" } });
-return;
-}
-if (actionId === "share") {
-Share.share({ message: "View Magic Moments Photography on RoyalLagn." });
-return;
-}
-showPlaceholder("Promote Business");
-};
 
-return (
-<SafeAreaView
-className="flex-1 bg-background"
-edges={["top", "left", "right"]}
->
-{/* Header */}
-<View className="flex-row items-center justify-between px-4 py-3">
-<TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full bg-muted" onPress={() => router.push("/Vendors_dash_profile")}>
-<Menu size={20} className="text-foreground" />
-</TouchableOpacity>
-
-<Text className="text-xl font-bold text-primary">
-Royal<Text className="text-foreground">Lagn</Text>
-</Text>
-
-<TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full bg-muted relative" onPress={() => router.push("/VendorNotifications")}>
-<Bell size={20} className="text-foreground" />
-<View className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full items-center justify-center">
-<Text className="text-white text-xs font-bold">3</Text>
-</View>
-</TouchableOpacity>
-</View>
-
-<ScrollView
-contentContainerStyle={{ paddingBottom: 120 }}
-showsVerticalScrollIndicator={false}
->
-{/* Welcome Section */}
-<View className="mx-4 mt-2 p-4 bg-card rounded-2xl border border-border">
-<View className="flex-row items-start justify-between">
-<View className="flex-1">
-<Text className="text-muted-foreground text-sm mb-1">
-Welcome back,
-</Text>
-<View className="flex-row items-center flex-wrap">
-<Text className="text-foreground font-bold text-base mr-2">
-Magic Moments Photography
-</Text>
-<View className="bg-green-100 px-2 py-0.5 rounded-full flex-row items-center">
-<Text className="text-green-600 text-xs">✓ Verified</Text>
-</View>
-</View>
-<Text className="text-muted-foreground text-xs mt-1">
-Member since Jan 2024
-</Text>
-</View>
-<Image
-source={{ uri: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&auto=format&fit=crop&q=60" }}
-className="w-16 h-16 rounded-xl"
-resizeMode="cover"
-/>
-</View>
-</View>
-
-{/* Profile Overview */}
-<View className="mx-4 mt-4">
-<View className="flex-row items-center justify-between mb-3">
-<Text className="text-foreground font-bold text-base">
-Profile Overview
-</Text>
-<TouchableOpacity className="flex-row items-center" onPress={() => router.push({ pathname: "/VendorsProfile", params: { vendorId: "p1", category: "Photographers" } })}>
-<Text className="text-primary text-sm font-medium">
-View Public Profile
-</Text>
-<ChevronRight size={16} className="text-primary" />
-</TouchableOpacity>
-</View>
-
-<View className="flex-row flex-wrap justify-between">
-{stats.map((stat) => {
-const Icon = stat.icon;
-return (
-<View
-key={stat.id}
-className="w-[23%] bg-card rounded-xl p-3 items-center border border-border"
->
-<Icon size={20} color={stat.color} />
-<Text className="text-foreground font-bold text-lg mt-1">
-{stat.value}
-</Text>
-<Text className="text-muted-foreground text-xs text-center">
-{stat.label}
-</Text>
-</View>
-);
-})}
-</View>
-</View>
-
-{/* Complete Your Profile */}
-<View className="mx-4 mt-5">
-<View className="flex-row items-center justify-between mb-3">
-<Text className="text-foreground font-bold text-base">
-Complete Your Profile
-</Text>
-<Text className="text-muted-foreground text-sm">85% Completed</Text>
-</View>
-
-{/* Progress Bar */}
-<View className="h-2 bg-muted rounded-full overflow-hidden mb-4">
-<View
-className="h-full bg-primary rounded-full"
-style={{ width: "85%" }}
-/>
-</View>
-
-{/* Profile Items */}
-<View className="gap-2">
-{profileItems.map((item) => {
-const Icon = item.icon;
-return (
-<TouchableOpacity
-key={item.id}
-className="flex-row items-center p-3 bg-card rounded-xl border border-border"
-onPress={() => {
-if (item.id === "business" || item.id === "about") router.push("/VendorEditProfile");
-else if (item.id === "services" || item.id === "pricing") router.push("/VendorServices");
-else if (item.id === "portfolio") router.push("/VendorGallery");
-else if (item.id === "seo") router.push("/VendorSettings");
-else Alert.alert(item.title, `${item.subtitle}. Changes are kept locally.`);
-}}
->
-<View
-className="w-10 h-10 rounded-xl items-center justify-center mr-3"
-style={{ backgroundColor: `${item.color}15` }}
->
-<Icon size={20} color={item.color} />
-</View>
-
-<View className="flex-1">
-<Text className="text-foreground font-semibold text-sm">
-{item.title}
-</Text>
-<Text className="text-muted-foreground text-xs">
-{item.subtitle}
-</Text>
-</View>
-
-<View className="flex-row items-center gap-2">
-<View className="px-2 py-1 rounded-full bg-muted">
-<Text
-className="text-xs font-medium"
-style={{ color: item.color }}
->
-{item.progress}%
-</Text>
-</View>
-<ChevronRight size={16} className="text-muted-foreground" />
-</View>
-</TouchableOpacity>
-);
-})}
-</View>
-</View>
-
-{/* Quick Actions */}
-<View className="mx-4 mt-5">
-<Text className="text-foreground font-bold text-base mb-3">
-Quick Actions
-</Text>
-
-<View className="flex-row justify-between">
-{quickActions.map((action) => {
-const Icon = action.icon;
-return (
-<TouchableOpacity key={action.id} className="items-center" onPress={() => handleQuickAction(action.id)}>
-<View
-className="w-14 h-14 rounded-2xl items-center justify-center mb-2"
-style={{ backgroundColor: `${action.color}15` }}
->
-<Icon size={22} color={action.color} />
-</View>
-<Text className="text-foreground text-xs">
-{action.title}
-</Text>
-</TouchableOpacity>
-);
-})}
-</View>
-</View>
-
-{/* Need Help */}
-<View className="mx-4 mt-5 p-4 bg-card rounded-2xl border border-border">
-<View className="flex-row items-center justify-between">
-<View className="flex-1">
-<Text className="text-foreground font-bold text-base mb-1">
-Need Help?
-</Text>
-<Text className="text-muted-foreground text-xs mb-3">
-{"We're here to help you grow your business"}
-</Text>
-<TouchableOpacity className="bg-primary px-4 py-2 rounded-full self-start" onPress={() => router.push("/VendorHelp")}>
-<Text className="text-white text-xs font-medium">
-Contact Support
-</Text>
-</TouchableOpacity>
-</View>
-<View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center ml-3">
-<Headphones size={28} color="#E91E63" />
-</View>
-</View>
-</View>
-</ScrollView>
-
-{/* Bottom Tab Bar */}
-<View
-className="absolute bottom-0 left-0 right-0 bg-card border-t border-border flex-row justify-around py-3 pb-6"
-style={{
-shadowColor: "#000",
-shadowOffset: { width: 0, height: -2 },
-shadowOpacity: 0.05,
-shadowRadius: 8,
-elevation: 10,
-}}
->
-{tabs.map((tab) => {
-const Icon = tab.icon;
-const isActive = tab.id === activeTab;
-return (
-<TouchableOpacity
-key={tab.id}
-className="items-center"
-onPress={() => handleTabPress(tab.id)}
->
-<Icon
-size={22}
-color={isActive ? "#E91E63" : isDark ? "#78716C" : "#A8A29E"}
-/>
-<Text
-className="text-xs mt-1"
-style={{
-color: isActive ? "#E91E63" : isDark ? "#78716C" : "#A8A29E",
-fontWeight: isActive ? "600" : "400",
-}}
->
-{tab.title}
-</Text>
-</TouchableOpacity>
-);
-})}
-</View>
-</SafeAreaView>
-);
-}
+const styles = StyleSheet.create({
+  page: { flex: 1 },
+  scroll: { paddingHorizontal: 16, paddingTop: 22, paddingBottom: 24, width: "100%", alignSelf: "center" },
+  desktopScroll: { maxWidth: 1120, paddingHorizontal: 28, paddingBottom: 48 },
+  eyebrowRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18, gap: 12 },
+  eyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 1.6, marginBottom: 6 },
+  greeting: { fontSize: 28, lineHeight: 34, fontWeight: "800", letterSpacing: -0.8 },
+  businessName: { fontSize: 14, lineHeight: 20, marginTop: 3 },
+  verified: { flexDirection: "row", gap: 5, alignItems: "center", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 7 },
+  notice: { borderWidth: 1, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 14 },
+  noticeTitle: { fontSize: 13, fontWeight: "700", marginBottom: 2 },
+  noticeText: { fontSize: 12, lineHeight: 17 },
+  flex: { flex: 1, minWidth: 0 },
+  subscription: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderWidth: 1, borderRadius: 20, marginBottom: 15 },
+  planIcon: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  smallLabel: { fontSize: 9, letterSpacing: 1.2, fontWeight: "800" },
+  planName: { fontSize: 16, fontWeight: "800", textTransform: "capitalize", marginTop: 2 },
+  manage: { flexDirection: "row", alignItems: "center", gap: 3 },
+  statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
+  statsDesktop: { flexWrap: "nowrap" },
+  statCard: { width: "48.4%", minHeight: 126, borderRadius: 20, borderWidth: 1, padding: 14, shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.05, shadowRadius: 16, elevation: 2 },
+  statDesktop: { flex: 1, width: "auto" },
+  statIcon: { width: 34, height: 34, borderRadius: 12, alignItems: "center", justifyContent: "center", marginBottom: 10 },
+  statValue: { fontSize: 23, fontWeight: "800", letterSpacing: -0.5 },
+  statLabel: { fontSize: 11, marginTop: 2 },
+  sectionCard: { borderWidth: 1, borderRadius: 22, padding: 16, marginBottom: 16, shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.035, shadowRadius: 15, elevation: 1 },
+  sectionHeading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 10 },
+  sectionTitle: { fontSize: 16, lineHeight: 21, fontWeight: "800", letterSpacing: -0.25 },
+  sectionSubtitle: { fontSize: 11, lineHeight: 16, marginTop: 3 },
+  percent: { fontSize: 20, fontWeight: "900" },
+  progressTrack: { height: 7, borderRadius: 6, overflow: "hidden", marginTop: 14 },
+  progressFill: { height: "100%", borderRadius: 6 },
+  completionRow: { minHeight: 52, flexDirection: "row", alignItems: "center", gap: 9, paddingVertical: 8, paddingHorizontal: 2, borderRadius: 8 },
+  stateIcon: { width: 30, height: 30, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  completionLabel: { flex: 1, fontSize: 12, fontWeight: "600" },
+  stateLabel: { fontSize: 10, fontWeight: "700" },
+  sectionHeader: { marginTop: 5, marginBottom: 10 },
+  actionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 18 },
+  action: { width: "48.4%", minHeight: 66, borderRadius: 18, borderWidth: 1, padding: 11, flexDirection: "row", alignItems: "center", gap: 8 },
+  actionIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  actionText: { flex: 1, fontSize: 11, fontWeight: "700" },
+  pressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
+  dualGrid: { gap: 12 },
+  dualDesktop: { flexDirection: "row" },
+  summaryCard: { borderWidth: 1, borderRadius: 22, padding: 16, marginBottom: 12 },
+  summaryDesktop: { flex: 1 },
+  summaryHint: { fontSize: 12, lineHeight: 18, marginTop: 14 },
+  enquiry: { minHeight: 61, flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10 },
+  avatar: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  enquiryName: { fontSize: 12, fontWeight: "700" },
+  enquiryMessage: { fontSize: 11, marginTop: 3 },
+  status: { overflow: "hidden", borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5, fontSize: 9, fontWeight: "800", textTransform: "capitalize" },
+  empty: { alignItems: "center", paddingVertical: 24, gap: 8 },
+  emptyText: { fontSize: 12, textAlign: "center" },
+  loading: { position: "absolute", top: "50%", left: 0, right: 0, alignItems: "center", pointerEvents: "none" },
+});

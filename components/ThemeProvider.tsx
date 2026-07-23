@@ -2,6 +2,7 @@
 import { useColorScheme } from 'nativewind';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import { lightTheme, darkTheme } from '../theme';
 
 interface ThemeProviderProps {
@@ -16,6 +17,7 @@ type AppThemeContextValue = {
 };
 
 const AppThemeContext = createContext<AppThemeContextValue | null>(null);
+const THEME_KEY = 'royallagn-color-scheme';
 
 export function useAppTheme() {
   const context = useContext(AppThemeContext);
@@ -37,11 +39,26 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   );
 
   useEffect(() => {
+    const restoreTheme = async () => {
+      const saved = Platform.OS === 'web'
+        ? globalThis.localStorage?.getItem(THEME_KEY)
+        : await SecureStore.getItemAsync(THEME_KEY);
+      if (saved === 'light' || saved === 'dark') setColorScheme(saved);
+    };
+    restoreTheme().catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
     setNativeWindColorScheme(colorScheme);
   }, [colorScheme, setNativeWindColorScheme]);
 
   const toggleColorScheme = useCallback(() => {
-    setColorScheme((current) => (current === 'dark' ? 'light' : 'dark'));
+    setColorScheme((current) => {
+      const next = current === 'dark' ? 'light' : 'dark';
+      if (Platform.OS === 'web') globalThis.localStorage?.setItem(THEME_KEY, next);
+      else SecureStore.setItemAsync(THEME_KEY, next).catch(() => undefined);
+      return next;
+    });
   }, []);
 
   const contextValue = useMemo(
@@ -73,7 +90,13 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   return (
     <AppThemeContext.Provider value={contextValue}>
-      <View style={themeVars} className={`${colorScheme} flex-1 bg-background`}>
+      <View
+        style={[
+          themeVars,
+          { flex: 1, backgroundColor: colorScheme === 'dark' ? '#141414' : '#FFFBFC' },
+        ]}
+        className={`${colorScheme} flex-1 bg-background`}
+      >
         {children}
       </View>
     </AppThemeContext.Provider>
